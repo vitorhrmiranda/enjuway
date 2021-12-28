@@ -4,7 +4,8 @@ Game = {
   scale = 5,
   name = "Enjuway",
   over = false,
-  background = nil
+  background = nil,
+  sounds = {},
 }
 
 Player = {
@@ -56,6 +57,9 @@ function love.load()
   Player.animation = NewAnimation(love.graphics.newImage("assets/images/player-animation.png"), 16, 16, 1)
   Player.sounds.jump = love.audio.newSource("assets/sounds/jump.wav", "static")
   Player.sounds.jump:setVolume(0.05)
+
+  Game.sounds.gameover = love.audio.newSource("assets/sounds/explosion.wav", "static")
+  Game.sounds.gameover:setVolume(0.5)
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -73,6 +77,7 @@ function love.update(dt)
 
   if Player.body:getX() < 1 then -- limimar para o game over
     Game.over = true
+    Game.sounds.gameover:play()
   end
 
   Player.animation.currentTime = Player.animation.currentTime + dt
