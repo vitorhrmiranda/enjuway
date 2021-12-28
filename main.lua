@@ -10,6 +10,7 @@ Game = {
 Player = {
   x = 40,
   y = 0,
+  velx = 1,
   vely = 0,
   impulse = -2.5,
 }
@@ -40,6 +41,8 @@ function love.update()
   if Player.y > Game.height - Player.height then
     PutInGround(Player)
   end
+
+  PlayerWalk()
 
   Obstacle.x = Obstacle.x + Obstacle.velx
   if Obstacle.x < 0 then
@@ -126,4 +129,22 @@ end
 
 function GameOver()
   Game.over = true
+end
+
+function PlayerWalk()
+  if love.keyboard.isDown("left") then
+    Player.x = Player.x - Player.velx
+  end
+
+  if love.keyboard.isDown("right") then
+    Player.x = Player.x + Player.velx
+  end
+
+  if Player.x < 0 then
+    Player.x = 0
+  end
+
+  if Player.x + Player.width > Game.width then
+    Player.x = Game.width - Player.width
+  end
 end
