@@ -1,3 +1,5 @@
+require('garment')
+
 Game = {
   width = 320,
   height = 180,
@@ -13,6 +15,7 @@ Player = {
   velx = 1,
   vely = 0,
   impulse = -2.5,
+  score = 0
 }
 
 Obstacle = {
@@ -32,10 +35,11 @@ function love.load()
   love.window.setTitle(Game.name)
 
   LoadPlayerAssets()
+  nom = Garment:new()
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
-function love.update()
+function love.update(dt)
   Player.vely = Player.vely + Game.gravity -- variação da velocidade
   Player.y = Player.y + Player.vely -- variação da posição
   if Player.y > Game.height - Player.height then
@@ -43,6 +47,7 @@ function love.update()
   end
 
   PlayerWalk()
+  nom:update(dt)
 
   Obstacle.x = Obstacle.x + Obstacle.velx
   if Obstacle.x < 0 then
@@ -70,10 +75,15 @@ function love.draw()
 
   -- desenha o player na posição x e y
   love.graphics.draw(Player.image, Player.x, Player.y)
-
+  
   -- desenha o obstáculo na posição x e y
   RGBColor(0, 0, 0)
   love.graphics.rectangle("fill", Obstacle.x, Obstacle.y, Obstacle.width, Obstacle.height)
+
+  nom:draw()
+
+  RGBColor(0, 0, 0)
+  love.graphics.print('Score: ' .. Player.score, 5, 5)
 end
 
 function love.keypressed(key)
