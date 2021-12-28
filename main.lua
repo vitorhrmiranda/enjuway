@@ -12,6 +12,11 @@ Random = {
   maxframes = 120
 }
 
+Obstacle = {
+  velx = -50,
+  vely = 0
+}
+
 local objects
 
 local cron = require 'cron'
@@ -159,10 +164,10 @@ function DespawnObstacles()
 end
 
 function AccelerateObstacles() 
+  Obstacle.velx = Obstacle.velx - 0.02
+
   for _, obstacle in ipairs(objects) do
-      obstacle.velx = -50
-      obstacle.vely = 0
-      obstacle.body:setLinearVelocity(obstacle.velx, obstacle.vely)
+      obstacle.body:setLinearVelocity(Obstacle.velx, Obstacle.vely)
   end
 end 
 
