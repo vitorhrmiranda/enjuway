@@ -1,4 +1,4 @@
-require('garment')
+local Garment = require("garment")
 
 Game = {
   width = 320,
@@ -18,6 +18,7 @@ function love.load()
 
   Player = {
     velx = 1,
+    score = 0
   }
   Ground = {}
   Obstacle = {
@@ -47,6 +48,8 @@ function love.load()
   Obstacle.fixture = love.physics.newFixture(Obstacle.body, Obstacle.shape, 5)
 
   love.graphics.setBackgroundColor(0.41, 0.53, 0.97)
+
+  Garment.new()
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -65,6 +68,8 @@ function love.update(dt)
   if Player.body:getX() < 1 then -- limimar para o game over
     Game.over = true
   end
+
+  Garment.update()
 end
 
 -- Roda a cada frame (Realizar update de tela aqui)
@@ -87,6 +92,17 @@ function love.draw()
 
   RGBColor(0, 0, 0)
   love.graphics.polygon("fill", Obstacle.body:getWorldPoints(Obstacle.shape:getPoints()))
+
+  -- desenha a pontuação
+  love.graphics.print("Score: " ..Player.score, 10, 4)
+
+  Garment.draw()
+
+  magicNumber = math.random(0, 2000)
+
+  if magicNumber < 10 then
+    
+  end
 end
 
 function love.keypressed(key)
@@ -136,11 +152,11 @@ function InGround()
 end
 
 function BeginContact(a, b, coll)
-
+  if Garment.beginContact(a, b, coll) then return end
 end
 
 function EndContact(a, b, coll)
-
+  
 end
 
 function PreSolve(a, b, coll)
