@@ -11,6 +11,7 @@ Player = {
   velx = 1,
   inGround = false,
   animation = {},
+  sounds = {},
 }
 Ground = {}
 Obstacle = {
@@ -53,6 +54,8 @@ function love.load()
   love.graphics.setBackgroundColor(1, 1, 1)
 
   Player.animation = NewAnimation(love.graphics.newImage("assets/images/player-animation.png"), 16, 16, 1)
+  Player.sounds.jump = love.audio.newSource("assets/sounds/jump.wav", "static")
+  Player.sounds.jump:setVolume(0.05)
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -193,6 +196,7 @@ function Player:Jump()
   if Player:InGround() then
     Player.body:applyLinearImpulse(0, -100)
     Player:SetImage("player-jump.png")
+    Player.sounds.jump:play()
   end
 end
 
