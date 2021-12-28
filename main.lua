@@ -35,7 +35,7 @@ function love.load()
   love.window.setTitle(Game.name)
 
   LoadPlayerAssets()
-  nom = Garment:new()
+  garment = Garment:new()
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -47,13 +47,12 @@ function love.update(dt)
   end
 
   PlayerWalk()
-  nom:update(dt)
-
+  
   Obstacle.x = Obstacle.x + Obstacle.velx
   if Obstacle.x < 0 then
     Obstacle.x = Game.width
   end
-
+  
   if HasCollision(Player, Obstacle) then
     GameOver()
   end
@@ -62,28 +61,28 @@ end
 -- Roda a cada frame (Realizar update de tela aqui)
 function love.draw()
   love.graphics.scale(Game.scale, Game.scale)
-
+  
   if Game.over then
     RGBColor(255, 0, 0)
     love.graphics.rectangle("fill", 0, 0, Game.width, Game.height)
     return
   end
-
+  
   -- definimos a cor branca
   RGBColor(255, 255, 255)
   love.graphics.rectangle("fill", 0, 0, Game.width, Game.height)
-
+  
   -- desenha o player na posição x e y
   love.graphics.draw(Player.image, Player.x, Player.y)
   
   -- desenha o obstáculo na posição x e y
   RGBColor(0, 0, 0)
   love.graphics.rectangle("fill", Obstacle.x, Obstacle.y, Obstacle.width, Obstacle.height)
-
-  nom:draw()
-
+  
   RGBColor(0, 0, 0)
   love.graphics.print('Score: ' .. Player.score, 5, 5)
+
+  garment.randomRespawn()
 end
 
 function love.keypressed(key)
