@@ -2,12 +2,15 @@ Game = {
   width = 320,
   height = 180,
   scale = 4,
-  name = "Enjuway"
+  name = "Enjuway",
+  gravity = 0.1,
 }
 
 Player = {
   x = 0,
   y = 0,
+  vely = 0,
+  impulse = -2.5,
 }
 
 -- Roda quando o jogo abre (Inicialização deve acontecer aqui)
@@ -23,7 +26,13 @@ end
 
 -- Roda a cada frame (Realizar update de estado aqui)
 function love.update()
-  Player.y = Game.height - Player.height
+  Player.vely = Player.vely + Game.gravity
+
+  Player.y = Player.y + Player.vely
+  if Player.y > Game.height - Player.height then
+    PutInGround(Player)
+  end
+
 end
 
 -- Roda a cada frame (Realizar update de tela aqui)
@@ -44,9 +53,17 @@ function love.keypressed(key)
     love.event.quit()
   end
 
-  --Debug CTRL Direito
+  -- Debug CTRL Direito
   if key == "rctrl" then
     debug.debug()
+  end
+
+  -- Player
+  if key == "up" then
+    -- o pulo pode iniciar se o avatar estiver no chão
+    if Game.height - Player.height == Player.y then
+      Player.vely = Player.impulse
+    end
   end
 end
 
@@ -67,4 +84,9 @@ end
 
 function RGBColor(r, g, b)
   love.graphics.setColor(r/255, g/255, b/255)
+end
+
+function PutInGround(obj)
+  obj.y = Game.height - obj.height
+  obj.vely = 0
 end
