@@ -96,12 +96,9 @@ function love.draw()
   love.graphics.polygon("fill", Ground.body:getWorldPoints(Ground.shape:getPoints()))
 
   -- desenha o player na posição x e y
-  RGBColor(255, 255, 255)
+  Player:Draw()
 
-  local spriteNum = math.floor(Player.animation.currentTime / Player.animation.duration * #Player.animation.quads) + 1
-
-  love.graphics.draw(Player.animation.spriteSheet, Player.animation.quads[spriteNum], Player.body:getX(), Player.body:getY(),  0,  1, 1, Player.image:getWidth()/2, Player.image:getHeight()/2)
-
+  -- desenha o obstaculo
   RGBColor(255, 255, 255)
   love.graphics.draw(Obstacle.image, Obstacle.body:getX(), Obstacle.body:getY(), 0,  1, 1, Obstacle.image:getWidth()/2, Obstacle.image:getHeight()/2)
 end
@@ -157,7 +154,6 @@ end
 function BeginContact(a, b, coll)
   if a:getUserData() == "Ground" and b:getUserData() == "Player" then
     Player.inGround = true
-    Player:SetImage("player.png")
   end
 end
 
@@ -228,4 +224,34 @@ function NewAnimation(image, width, height, duration)
   animation.currentTime = 0
 
   return animation
+end
+
+function Player:Draw()
+  RGBColor(255, 255, 255)
+
+  if Player:InGround() then
+    local spriteNum = math.floor(Player.animation.currentTime / Player.animation.duration * #Player.animation.quads) + 1
+    love.graphics.draw(
+      Player.animation.spriteSheet,
+      Player.animation.quads[spriteNum],
+      Player.body:getX(),
+      Player.body:getY(),
+      0,
+      1,
+      1,
+      Player.image:getWidth()/2,
+      Player.image:getHeight()/2
+    )
+  else
+    love.graphics.draw(
+      Player.image,
+      Player.body:getX(),
+      Player.body:getY(),
+      0,
+      1,
+      1,
+      Player.image:getWidth()/2,
+      Player.image:getHeight()/2
+    )
+  end
 end
