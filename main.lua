@@ -7,8 +7,21 @@ Game = {
   background = nil
 }
 
+Random = {
+  minframes = 30,
+  maxframes = 120
+}
+
+local objects
+
+local cron = require 'cron'
+local callback = function() PushObstacleAndScheduleNext() end
+local obstacleClock
+
 -- Roda quando o jogo abre (Inicialização deve acontecer aqui)
 function love.load()
+  objects = {}
+
   -- the height of a meter our worlds will be 64px
   local meter  = 18
   love.physics.setMeter(meter)
@@ -19,11 +32,7 @@ function love.load()
     inGround = false
   }
   Ground = {}
-  Obstacle = {
-    velx = -50,
-    vely = 0,
-  }
-
+  
   love.window.setMode(
     Game.width * Game.scale,
     Game.height * Game.scale
@@ -43,12 +52,10 @@ function love.load()
   Player.fixture = love.physics.newFixture(Player.body, Player.shape)
   Player.fixture:setUserData("Player")
 
-  Obstacle.body = love.physics.newBody(World, Game.width, Game.height, "dynamic")
-  Obstacle.shape = love.physics.newRectangleShape(0, 0, 10, 15) -- 10x15 tamanho do obstaculo
-  Obstacle.fixture = love.physics.newFixture(Obstacle.body, Obstacle.shape, 5)
-  Obstacle.fixture:setUserData("Obstacle")
-
   love.graphics.setBackgroundColor(1, 1, 1)
+
+  -- Schedules the first obstacle
+  ScheduleObstacule(love.math.random(Random.minframes, Random.maxframes))
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -56,13 +63,12 @@ function love.update(dt)
   World:update(dt)
   World:setCallbacks(BeginContact, EndContact, PreSolve, PostSolve)
 
+  obstacleClock:update(1)
+
+  DespawnObstacles()
   AccelerateObstacles()
 
   PlayerWalk()
-
-  if Obstacle.body:getX() < 0 then
-    Obstacle.body:setX(Game.width)
-  end
 
   if Player.body:getX() < 1 then -- limimar para o game over
     Game.over = true
@@ -90,8 +96,7 @@ function love.draw()
   RGBColor(255, 255, 255)
   love.graphics.draw(Player.image, Player.body:getX(), Player.body:getY(), 0,  1, 1, Player.image:getWidth()/2, Player.image:getHeight()/2)
 
-  RGBColor(0, 0, 0)
-  love.graphics.polygon("fill", Obstacle.body:getWorldPoints(Obstacle.shape:getPoints()))
+  DrawObstacles()
 end
 
 function love.keypressed(key)
@@ -138,9 +143,53 @@ function GameOver()
   Game.over = true
 end
 
+function DrawObstacles()
+  for _, obstacle in ipairs(objects) do
+      RGBColor(0, 0, 0)
+      love.graphics.polygon("fill", obstacle.body:getWorldPoints(obstacle.shape:getPoints()))
+  end
+end
+
+function DespawnObstacles() 
+  for i, obstacle in ipairs(objects) do
+    if obstacle.body:getX() < 0 then
+      PopObstacle(i)
+    end
+  end
+end
+
 function AccelerateObstacles() 
-  Obstacle.velx = Obstacle.velx - 0.02
-  Obstacle.body:setLinearVelocity(Obstacle.velx, Obstacle.vely)
+  for _, obstacle in ipairs(objects) do
+      obstacle.velx = -50
+      obstacle.vely = 0
+      obstacle.body:setLinearVelocity(obstacle.velx, obstacle.vely)
+  end
+end 
+
+function PushObstacle() 
+  print("Push obstacle")
+
+  local obstacle = {}
+  obstacle.body = love.physics.newBody(World, Game.width, Game.height, "dynamic")
+  obstacle.shape = love.physics.newRectangleShape(0, 0, 10, 15) -- 10x15 tamanho do obstaculo
+  obstacle.fixture = love.physics.newFixture(obstacle.body, obstacle.shape, 5)
+  obstacle.fixture:setUserData("Obstacle")
+
+  table.insert(objects, obstacle)
+end 
+
+function PushObstacleAndScheduleNext()
+  PushObstacle()
+  ScheduleObstacule(love.math.random(Random.minframes, Random.maxframes))
+end 
+
+function ScheduleObstacule(afterFrames) 
+  obstacleClock = cron.after(afterFrames, callback)
+end
+
+function PopObstacle(i)
+  print("Popping obstacle")
+  table.remove(objects, i)
 end 
 
 function InGround()
