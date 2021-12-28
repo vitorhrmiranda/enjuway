@@ -56,7 +56,7 @@ function love.update(dt)
   World:update(dt)
   World:setCallbacks(BeginContact, EndContact, PreSolve, PostSolve)
 
-  Obstacle.body:setLinearVelocity(Obstacle.velx, Obstacle.vely)
+  AccelerateObstacles()
 
   PlayerWalk()
 
@@ -137,6 +137,11 @@ end
 function GameOver()
   Game.over = true
 end
+
+function AccelerateObstacles() 
+  Obstacle.velx = Obstacle.velx - 0.02
+  Obstacle.body:setLinearVelocity(Obstacle.velx, Obstacle.vely)
+end 
 
 function InGround()
   return Player.inGround

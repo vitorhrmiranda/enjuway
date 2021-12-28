@@ -1,4 +1,4 @@
 .PHONY: exec
 
 exec:
-	love .
+	love ./
