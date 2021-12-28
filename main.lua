@@ -4,13 +4,22 @@ Game = {
   scale = 4,
   name = "Enjuway",
   gravity = 0.1,
+  over = false,
 }
 
 Player = {
-  x = 0,
+  x = 40,
   y = 0,
   vely = 0,
   impulse = -2.5,
+}
+
+Obstacle = {
+  x = Game.width - 8,
+  y = Game.height - 16,
+  width = 8,
+  height = 16,
+  velx = -1,
 }
 
 -- Roda quando o jogo abre (Inicialização deve acontecer aqui)
@@ -26,18 +35,31 @@ end
 
 -- Roda a cada frame (Realizar update de estado aqui)
 function love.update()
-  Player.vely = Player.vely + Game.gravity
-
-  Player.y = Player.y + Player.vely
+  Player.vely = Player.vely + Game.gravity -- variação da velocidade
+  Player.y = Player.y + Player.vely -- variação da posição
   if Player.y > Game.height - Player.height then
     PutInGround(Player)
   end
 
+  Obstacle.x = Obstacle.x + Obstacle.velx
+  if Obstacle.x < 0 then
+    Obstacle.x = Game.width
+  end
+
+  if HasCollision(Player, Obstacle) then
+    GameOver()
+  end
 end
 
 -- Roda a cada frame (Realizar update de tela aqui)
 function love.draw()
   love.graphics.scale(Game.scale, Game.scale)
+
+  if Game.over then
+    RGBColor(255, 0, 0)
+    love.graphics.rectangle("fill", 0, 0, Game.width, Game.height)
+    return
+  end
 
   -- definimos a cor branca
   RGBColor(255, 255, 255)
@@ -45,6 +67,10 @@ function love.draw()
 
   -- desenha o player na posição x e y
   love.graphics.draw(Player.image, Player.x, Player.y)
+
+  -- desenha o obstáculo na posição x e y
+  RGBColor(0, 0, 0)
+  love.graphics.rectangle("fill", Obstacle.x, Obstacle.y, Obstacle.width, Obstacle.height)
 end
 
 function love.keypressed(key)
@@ -89,4 +115,15 @@ end
 function PutInGround(obj)
   obj.y = Game.height - obj.height
   obj.vely = 0
+end
+
+function HasCollision(obj1, obj2)
+  return obj1.x < obj2.x + obj2.width and
+    obj1.x + obj1.width > obj2.x and
+    obj1.y < obj2.y + obj2.height and
+    obj1.y + obj1.height > obj2.y
+end
+
+function GameOver()
+  Game.over = true
 end
