@@ -23,21 +23,23 @@ Forces = {
   playerYDown = 100,
   playerXDown = 0,
   playerXSpeed = 1,
-  groundXSpeed = 50,
   groundYSpeed = 0,
-  groundXAccelerationRate = 0.02,
-  obstacleXSpeed = 50,
-  obstacleYSpeed = 0,
-  obstacleXAccelerationRate = 0.02,
-  garmentXSpeed = 50,
-  garmentYSpeed = 0,
-  garmentXAccelerationRate = 0.02,
   powerUpXSpeed = 50,
   powerUpYSpeed = 0,
   powerUpXAccelerationRate = 0.02,
   powerUpXBoostSpeed = 0.5, -- extra speed
   powerUpXMaxBoost = 1, -- max boost
   powerUpBoostDecayRate = 0.1 -- will decay x per second
+}
+
+WorldForces = {
+  obstacleXSpeed = 50,
+  obstacleYSpeed = 0,
+  obstacleXAccelerationRate = 0.02,
+  garmentXSpeed = 50,
+  obstacleXSpeed = 50,
+  garmentXAccelerationRate = 0.02,
+  garmentYSpeed = 0
 }
 
 Dimensions = {
@@ -182,6 +184,7 @@ local sceneryClock = cron.every(10, sceneryCallback) -- executes every second
 
 -- Roda quando o jogo abre (Inicialização deve acontecer aqui)
 function love.load()
+  ResetGameParams()
   love.physics.setMeter(Dimensions.meter)
 
   local font = love.graphics.newFont(Fonts.Minecraft, 18)
@@ -477,10 +480,10 @@ function PopGroundTile(i)
 end
 
 function AccelerateGroundTiles(dt)
-  Forces.groundXSpeed = Forces.groundXSpeed + Forces.groundXAccelerationRate
+  WorldForces.groundXSpeed = WorldForces.groundXSpeed + WorldForces.groundXAccelerationRate
 
   for _, groundTile in ipairs(GroundTiles) do
-    groundTile.x = groundTile.x - (Forces.groundXSpeed * dt)
+    groundTile.x = groundTile.x - (WorldForces.groundXSpeed * dt)
   end
 end
 -- End GroundTiles
@@ -503,7 +506,7 @@ function DrawPoints()
   love.graphics.draw(Game.ScoreAsset, 10, 0)
 
   RGBColor(Colors.Black)
-  love.graphics.print(Player.score, 50, 28)
+  love.graphics.print(Player.score, 50, 26)
 
   local magicNumber = math.random(0, 2000)
 
@@ -549,10 +552,10 @@ function DestroyObstacle(obstacle)
 end
 
 function AccelerateObstacles()
-  Forces.obstacleXSpeed = Forces.obstacleXSpeed + Forces.obstacleXAccelerationRate
+  WorldForces.obstacleXSpeed = WorldForces.obstacleXSpeed + WorldForces.obstacleXAccelerationRate
 
   for _, obstacle in ipairs(Obstacles) do
-      obstacle.body:setLinearVelocity(Forces.obstacleXSpeed * -1, Forces.obstacleYSpeed * -1)
+      obstacle.body:setLinearVelocity(WorldForces.obstacleXSpeed * -1, WorldForces.obstacleYSpeed * -1)
   end
 end
 
@@ -754,4 +757,20 @@ function DrawGameover()
 
   RGBColor(Colors.Black)
   love.graphics.print("Score: " .. Player.score, 130, Game.height/2)
+end
+
+function ResetGameParams()
+  Player.score = 0
+  Obstacles = {}
+  WorldForces = {
+    obstacleXSpeed = 50,
+    obstacleYSpeed = 0,
+    obstacleXAccelerationRate = 0.02,
+    garmentXSpeed = 50,
+    obstacleXSpeed = 50,
+    garmentXAccelerationRate = 0.02,
+    garmentYSpeed = 0,
+    groundXSpeed = 50,
+    groundXAccelerationRate = 0.02,
+  }
 end

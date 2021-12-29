@@ -39,7 +39,7 @@ function PowerUp:update(dt)
   AcceleratePowerUps()
 end
 
-function UpdatePowerUpClocks(dt) 
+function UpdatePowerUpClocks(dt)
   boostClock:update(dt)
 end
 
@@ -74,22 +74,22 @@ function PowerUp:collect()
   PopPowerUp(GetPowerUpTableIndex(self))
 end
 
-function AddBoost(xForce) 
-  if Player.velx < Forces.playerXSpeed then 
+function AddBoost(xForce)
+  if Player.velx < Forces.playerXSpeed then
     Player.velx = Forces.playerXSpeed
-  end   
+  end
 
-  local newBoost = Player.currentXBoost + Forces.powerUpXBoostSpeed 
-  if (newBoost >= Forces.powerUpXMaxBoost) then 
+  local newBoost = Player.currentXBoost + Forces.powerUpXBoostSpeed
+  if (newBoost >= Forces.powerUpXMaxBoost) then
     newBoost = Forces.powerUpXMaxBoost
-  end  
+  end
 
   Player.currentXBoost = newBoost
 end
 
-function DecayBoost() 
+function DecayBoost()
   if Player.currentXBoost > 0 then
-    Player.currentXBoost = Player.currentXBoost - Forces.powerUpBoostDecayRate 
+    Player.currentXBoost = Player.currentXBoost - Forces.powerUpBoostDecayRate
   end
 end
 

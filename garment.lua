@@ -48,9 +48,10 @@ function DespawnGarments()
 end
 
 function AccelerateGarments()
-  Forces.garmentXSpeed = Forces.garmentXSpeed + Forces.garmentXAccelerationRate
+  WorldForces.garmentXSpeed = WorldForces.garmentXSpeed + WorldForces.garmentXAccelerationRate
+
   for _, instance in ipairs(ActiveGarment) do
-      instance.physics.body:setLinearVelocity(Forces.garmentXSpeed * -1, Forces.garmentYSpeed * -1)
+      instance.physics.body:setLinearVelocity(WorldForces.garmentXSpeed * -1, WorldForces.garmentYSpeed * -1)
   end
 end
 
@@ -95,11 +96,11 @@ function Garment.beginContact(a, b, collision)
 
   if a:getUserData().tag == Tags.garment and b:getUserData().tag == Tags.player then
     instance = a
-  elseif a:getUserData().tag == Tags.player and b:getUserData().tag == Tags.garment then 
+  elseif a:getUserData().tag == Tags.player and b:getUserData().tag == Tags.garment then
     instance = b
-  end   
+  end
 
-  if (instance ~= nil) then 
+  if (instance ~= nil) then
     local garment = GetGarmentById(instance:getUserData().id)
     garment:collect()
 
