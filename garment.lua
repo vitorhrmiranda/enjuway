@@ -43,7 +43,7 @@ function Garment:update()
   instanceClone.physics.body:setLinearVelocity(-50, 0)
   instanceClone.checkRemove()
 
-  if #Obstacles < 1 then
+  if #ActiveGarment < 1 then
     Garment:new()
   end
 end
