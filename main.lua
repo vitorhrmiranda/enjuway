@@ -208,6 +208,13 @@ function love.load()
   LoadBackgroundAssets()
 end
 
+-- Atualiza o clock de spawn dos obstaculos e garments a cada frame
+function UpdateClocks(dt)
+  obstacleClock:update(dt)
+  garmentClock:update(dt)
+  powerUpClock:update(dt)
+end
+
 -- Roda a cada frame (Realizar update de estado aqui)
 function love.update(dt)
   World:update(dt)
