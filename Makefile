@@ -2,3 +2,6 @@
 
 exec:
 	love ./
+
+build:
+	zip enjuway.love .
