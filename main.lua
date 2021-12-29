@@ -98,6 +98,7 @@ Sounds = {
   Player = {
     jump = "assets/sounds/jump.wav",
     collect = "assets/sounds/pickupCoin.wav",
+    powerUp = "assets/sounds/powerUp.wav",
   }
 }
 
@@ -170,6 +171,9 @@ function love.load()
 
   Player.sounds.collect = love.audio.newSource(Sounds.Player.collect, "static")
   Player.sounds.collect:setVolume(0.05)
+
+  Player.sounds.powerUp = love.audio.newSource(Sounds.Player.powerUp, "static")
+  Player.sounds.powerUp:setVolume(0.05)
 
   love.graphics.setBackgroundColor(1, 1, 1)
 

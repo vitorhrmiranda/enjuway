@@ -39,7 +39,7 @@ function PowerUp:update(dt)
   AcceleratePowerUps()
 end
 
-function UpdateClocks(dt) 
+function UpdateClocks(dt)
   boostClock:update(dt)
 end
 
@@ -67,20 +67,21 @@ function AcceleratePowerUps()
 end
 
 function PowerUp:collect()
+  Player.sounds.powerUp:play()
   AddBoost(Forces.powerUpXBoost, Forces.powerUpYBoost * -1)
 
   DestroyPowerUp(self)
   PopPowerUp(GetPowerUpTableIndex(self))
 end
 
-function AddBoost(xForce, yForce) 
+function AddBoost(xForce, yForce)
   Player.velx = 2
 end
 
-function DecayBoost() 
+function DecayBoost()
   print(Player.velx)
   if Player.velx > Forces.powerUpXBoostSpeed then
-    Player.velx = Player.velx - Forces.powerUpBoostDecayRate 
+    Player.velx = Player.velx - Forces.powerUpBoostDecayRate
   end
 end
 
@@ -116,11 +117,11 @@ function PowerUp.beginContact(a, b, collision)
   local instance = nil
   if a:getUserData().tag == Tags.powerUp and b:getUserData().tag == Tags.player then
     instance = a
-  elseif a:getUserData().tag == Tags.player and b:getUserData().tag == Tags.powerUp then 
+  elseif a:getUserData().tag == Tags.player and b:getUserData().tag == Tags.powerUp then
     instance = b
-  end   
+  end
 
-  if (instance ~= nil) then 
+  if (instance ~= nil) then
     local powerUp = GetPowerUpById(instance:getUserData().id)
     powerUp:collect()
 
