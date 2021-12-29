@@ -35,7 +35,7 @@ Forces = {
   powerUpYSpeed = 0,
   powerUpXAccelerationRate = 0.02,
   powerUpXBoostSpeed = 0.5, -- extra speed
-  powerUpXMaxBoost = 1, -- max boost 
+  powerUpXMaxBoost = 1, -- max boost
   powerUpBoostDecayRate = 0.1 -- will decay x per second
 }
 
@@ -116,7 +116,7 @@ Assets = {
       [0] = "assets/images/ground_transition_one.png",
       [1] = "assets/images/ground_transition_two.png",
       [2] = "assets/images/ground_transition_three.png"
-    }
+    },
     ScenarioOne = {
       [0] = "assets/images/ground_one_one.png",
       [1] = "assets/images/ground_one_two.png",
@@ -239,6 +239,8 @@ function love.load()
 
   LoadBackgroundAssets()
 
+  LoadGroundAssets()
+
   SpawnGroundTiles()
 
   button_spawn(797, 300, "Start", 'start')
@@ -249,9 +251,9 @@ function love.update(dt)
   if Game.state == 'playing' then
     World:update(dt)
     World:setCallbacks(BeginContact, EndContact, PreSolve, PostSolve)
-  
+
     UpdateClocks(dt)
-  
+
     -- Remove os obstáculos que já sairam da tela
     DespawnObstacles()
     -- Incrementa a velocidade de aceleração de todos os obstáculos
@@ -261,21 +263,21 @@ function love.update(dt)
     DespawnGroundTiles()
     -- Incrementa a velocidade de aceleração de todos os objetos 'chao'
     AccelerateGroundTiles(dt)
-  
+
     PlayerWalk()
-  
+
     if Player.body:getX() < 1 then -- limimar para o game over
       Game.over = true
       Game.theme:stop()
       Game.sounds.gameover:play()
     end
-  
+
     -- Calcular o novo estado do player
     Player.animation.currentTime = Player.animation.currentTime + dt
     if Player.animation.currentTime >= Player.animation.duration then
       Player.animation.currentTime = Player.animation.currentTime - Player.animation.duration
     end
-  
+
     Garment:update()
     PowerUp:update(dt)
   end
@@ -290,10 +292,7 @@ function love.draw()
     love.graphics.draw(Game.background, 0, 0)
 
     if Game.over then
-      RGBColor(Colors.White)
-      love.graphics.rectangle("fill", 0, 0, Game.width, Game.height)
-      RGBColor(Colors.Black)
-      love.graphics.print("Game Over \nSe não enjoou\nAperte 'r' para recomeçar", 10, Game.height/2)
+      DrawGameover()
       return
     end
 
@@ -399,42 +398,54 @@ function LoadBackgroundAssets()
   Game.backgroundAssets[9] = LoadImage(Assets.Background[9])
 end
 
+function LoadGroundAssets()
+  Game.scenary = {}
+
+  Game.scenary[0] = {
+    ground = {
+      [0] = LoadImage(Assets.GroundTiles.ScenarioOne[0]),
+      [1] = LoadImage(Assets.GroundTiles.ScenarioOne[1]),
+      [2] = LoadImage(Assets.GroundTiles.ScenarioOne[2]),
+    }
+  }
+end
+
 -- Ground tiles
 function SpawnGroundTiles()
   local spawnQuantity = (Game.width / Dimensions.groundWidth) + 1
   for i = 1,spawnQuantity,1
-  do 
+  do
     SpawnNewRandomGroundTile(i)
   end
 end
 
-function SpawnNewRandomGroundTile(i) 
+function SpawnNewRandomGroundTile(i)
   table.insert(GroundTiles, GetRandomGroundTile(i))
 end
 
 function GetRandomGroundTile(i)
   local groundTile = {}
-  groundTile.image = LoadImage(SelectGroundTile())
+  groundTile.image = SelectGround()
   groundTile.x = Dimensions.groundWidth * (i - 1)
   groundTile.y = Game.height - groundTile.image:getHeight() / Game.scale
 
   return groundTile
-end 
+end
 
 function DrawGroundTiles()
   for i, groundTile in ipairs(GroundTiles) do
     RGBColor(Colors.White)
     love.graphics.draw(groundTile.image, groundTile.x, groundTile.y, 0, 1/Game.scale, 1/Game.scale)
   end
-end 
+end
 
-function SelectGroundTile()
-  return Assets.GroundTiles.ScenarioOne[love.math.random(0, #Assets.GroundTiles.ScenarioOne)]
+function SelectGround()
+  return Game.scenary[0].ground[love.math.random(0, #Assets.GroundTiles.ScenarioOne)]
 end
 
 function AddGroundTile(tile)
   table.insert(GroundTiles, groundTile)
-end 
+end
 
 function DespawnGroundTiles()
   for i, groundTile in ipairs(GroundTiles) do
@@ -603,7 +614,7 @@ function PostSolve(a, b, coll, normalimpulse, tangentimpulse)
 
 end
 
-function GetPlayerXSpeed() 
+function GetPlayerXSpeed()
   return Player.velx + Player.currentXBoost
 end
 
