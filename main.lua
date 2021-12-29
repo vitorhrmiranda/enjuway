@@ -69,6 +69,7 @@ Keys = {
   arrowRight = "right",
   restart = "r",
   m = "m",
+  enter = "return"
 }
 
 Assets = {
@@ -351,6 +352,11 @@ function love.keypressed(key)
   -- Mute
   if key == Keys.m then
     love.audio.stop()
+  end
+
+  -- Enter
+  if key == Keys.enter and Game.state == 'menu' then
+    Game.state = 'playing'
   end
 end
 
