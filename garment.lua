@@ -12,7 +12,6 @@ function Garment:new()
   instance.x = Game.width + instance.image:getWidth()
   instance.y = Game.height/1.5 -- um quarto de tela
   instance.scaleX = 1
-  instance.toBeRemoved = false
 
   instance.physics = {}
   instance.physics.body = love.physics.newBody(World, instance.x, instance.y, "dynamic")
