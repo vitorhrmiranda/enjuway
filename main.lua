@@ -45,7 +45,8 @@ Keys = {
   arrowUp = "up",
   arrowLeft = "left",
   arrowDown = "down",
-  arrowRight = "right"
+  arrowRight = "right",
+  restart = "r"
 }
 
 Assets = {
@@ -69,9 +70,11 @@ Assets = {
 Sounds = {
   Game = {
     gameover = "assets/sounds/explosion.wav",
+    theme = "assets/sounds/beach-theme.wav",
   },
   Player = {
     jump = "assets/sounds/jump.wav",
+    collect = "assets/sounds/pickupCoin.wav",
   }
 }
 
@@ -102,6 +105,8 @@ local obstacleClock
 function love.load()
   love.physics.setMeter(Dimensions.meter)
 
+  Obstacles = {}
+
   -- create a world for the bodies to exist in with horizontal gravity of 0 and vertical gravity of 9.81
   World = love.physics.newWorld(Forces.hGravity, Forces.vGravity * Dimensions.meter, true)
 
@@ -113,6 +118,7 @@ function love.load()
   love.window.setTitle(Game.name)
 
   LoadPlayerAssets()
+  PlayTheme()
 
   Ground.body = love.physics.newBody(World, 0, Game.height, "static")
 	Ground.shape = love.physics.newRectangleShape(Game.width * Game.scale, 5)
@@ -127,6 +133,9 @@ function love.load()
   Player.animation = NewAnimation(love.graphics.newImage(Assets.Player.animation), 16, 16, 1)
   Player.sounds.jump = love.audio.newSource(Sounds.Player.jump, "static")
   Player.sounds.jump:setVolume(0.05)
+
+  Player.sounds.collect = love.audio.newSource(Sounds.Player.collect, "static")
+  Player.sounds.collect:setVolume(0.05)
 
   love.graphics.setBackgroundColor(1, 1, 1)
 
@@ -156,6 +165,7 @@ function love.update(dt)
 
   if Player.body:getX() < 1 then -- limimar para o game over
     Game.over = true
+    Game.theme:stop()
     Game.sounds.gameover:play()
   end
 
@@ -176,8 +186,10 @@ function love.draw()
   love.graphics.draw(Game.background, 0, 0)
 
   if Game.over then
-    RGBColor(Colors.Red)
+    RGBColor(Colors.White)
     love.graphics.rectangle("fill", 0, 0, Game.width, Game.height)
+    RGBColor(Colors.Black)
+    love.graphics.print("Game Over \nSe não enjoou\nAperte 'r' para recomeçar", 10, Game.height/2)
     return
   end
 
@@ -194,18 +206,6 @@ function love.draw()
 
   -- Desenha a pontuação
   DrawPoints()
-end
-
-function DrawPoints()
-  love.graphics.print("Score: " ..Player.score, 10, 4)
-
-  Garment.draw()
-
-  local magicNumber = math.random(0, 2000)
-
-  if magicNumber < 10 then
-
-  end
 end
 
 function love.keypressed(key)
@@ -227,6 +227,11 @@ function love.keypressed(key)
   if key == Keys.arrowDown then
     Player:Land()
   end
+
+  if key == Keys.restart and Game.over then
+    Game.over = false
+    love.load()
+  end
 end
 
 function love.focus(f)
@@ -237,6 +242,24 @@ function love.focus(f)
 end
 
 -- Funções auxiliares
+function PlayTheme()
+  Game.theme = love.audio.newSource(Sounds.Game.theme, "static")
+  Game.theme:setVolume(0.3)
+  Game.theme:play()
+end
+
+function DrawPoints()
+  love.graphics.print("Score: " ..Player.score, 10, 4)
+
+  Garment.draw()
+
+  local magicNumber = math.random(0, 2000)
+
+  if magicNumber < 10 then
+
+  end
+end
+
 function LoadPlayerAssets()
   Player:SetImage(Assets.Player.stopped)
 

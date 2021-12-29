@@ -9,10 +9,8 @@ function Garment:new()
   instance.image = love.graphics.newImage(Assets.Points.tshirt)
   instance.image:setFilter("nearest", "nearest")
 
-  instance.x = 320
-  instance.y = 130
-  instance.width = 10
-  instance.height = 10
+  instance.x = Game.width + instance.image:getWidth()
+  instance.y = Game.height/1.5 -- um quarto de tela
   instance.scaleX = 1
   instance.toBeRemoved = false
 
@@ -62,6 +60,7 @@ function Garment.beginContact(a, b, collision)
   for i,instance in ipairs(ActiveGarment) do
     if a == instance.physics.fixture or b == instance.physics.fixture then
       if a == Player.fixture or b == Player.fixture then
+        Player.sounds.collect:play()
         instance.toBeRemoved = true
         return true
       end
