@@ -5,7 +5,7 @@ local ActiveGarment = {}
 function Garment:new()
   local instance = setmetatable({}, Garment)
 
-  instance.image = love.graphics.newImage(Assets.PowerUp.tshirt)
+  instance.image = love.graphics.newImage(Assets.Garment.tshirt)
   instance.image:setFilter("nearest", "nearest")
 
   instance.id = love.math.random(0, 1000000)
@@ -18,12 +18,12 @@ function Garment:new()
   instance.physics.shape = love.physics.newRectangleShape(instance.image:getWidth(), instance.image:getHeight())
   instance.physics.fixture = love.physics.newFixture(instance.physics.body, instance.physics.shape)
   instance.physics.fixture:setSensor(true)
-  instance.physics.fixture:setUserData(Tags.powerUp)
+  instance.physics.fixture:setUserData(Tags.garment)
 
   table.insert(ActiveGarment, instance)
 end
 
-function Garment:load() 
+function Garment:load()
   ActiveGarment = {}
 end
 
@@ -71,7 +71,7 @@ function GetIndex(table, element)
   end
 end
 
-function DestroyGarment(instance) 
+function DestroyGarment(instance)
   instance.physics.body:destroy()
 end
 
@@ -79,9 +79,9 @@ function PopGarment(i)
   table.remove(ActiveGarment, i)
 end
 
-function Garment:destroy() 
+function Garment:destroy()
   self.physics.body:destroy()
-end 
+end
 
 function Garment.beginContact(a, b, collision)
   for i,instance in ipairs(ActiveGarment) do
