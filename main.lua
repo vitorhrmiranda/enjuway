@@ -4,7 +4,8 @@ Game = {
   scale = 5,
   name = "Enjuway",
   over = false,
-  background = nil
+  background = nil,
+  sounds = {},
 }
 
 Forces = {
@@ -25,7 +26,7 @@ Dimensions = {
 }
 
 Random = {
-  obstacleSpawnMin = 30, 
+  obstacleSpawnMin = 30,
   obstacleSpawnMax = 120,
   obstacleUpdateRate = 1
 }
@@ -47,10 +48,25 @@ Keys = {
 
 Assets = {
   Player = {
-    main = "assets/images/player.png"
+    stopped = "assets/images/player.png",
+    animation = "assets/images/player-animation.png",
+    jump = "assets/images/player-jump.png",
   },
   Wall = {
     past = "assets/images/bg-wall-1.jpg"
+  },
+  Obstacle = {
+    [0] = "assets/images/percent.png",
+    [1] = "assets/images/percent_biggest.png"
+  }
+}
+
+Sounds = {
+  Game = {
+    gameover = "assets/sounds/explosion.wav",
+  },
+  Player = {
+    jump = "assets/sounds/jump.wav",
   }
 }
 
@@ -61,8 +77,16 @@ Colors = {
   Red = { r = 255, g = 0, b = 0 },
   White = { r = 255, g = 255, b = 255 }
 }
+Player = {
+  velx = Forces.playerXSpeed,
+  inGround = false,
+  animation = {},
+  sounds = {},
+}
 
-local Obstacles = {}
+Ground = {}
+
+Obstacles = {}
 
 local cron = require 'cron'
 local callback = function() PushObstacleAndScheduleNext() end
@@ -74,12 +98,7 @@ function love.load()
 
   -- create a world for the bodies to exist in with horizontal gravity of 0 and vertical gravity of 9.81
   World = love.physics.newWorld(Forces.hGravity, Forces.vGravity * Dimensions.meter, true)
-  Player = {
-    velx = Forces.playerXSpeed,
-    inGround = false
-  }
-  Ground = {}
-  
+
   love.window.setMode(
     Game.width * Game.scale,
     Game.height * Game.scale
@@ -99,10 +118,17 @@ function love.load()
   Player.fixture = love.physics.newFixture(Player.body, Player.shape)
   Player.fixture:setUserData(Tags.player)
 
+  Player.animation = NewAnimation(love.graphics.newImage(Assets.Player.animation), 16, 16, 1)
+  Player.sounds.jump = love.audio.newSource(Sounds.Player.jump, "static")
+  Player.sounds.jump:setVolume(0.05)
+
   love.graphics.setBackgroundColor(1, 1, 1)
 
   -- Agenda o primeiro obstaculo para um valor entre os próximos Random.obstacleSpawnMin e Random.obstacleSpawnMax
   ScheduleObstacule(love.math.random(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
+
+  Game.sounds.gameover = love.audio.newSource(Sounds.Game.gameover, "static")
+  Game.sounds.gameover:setVolume(0.5)
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -122,6 +148,13 @@ function love.update(dt)
 
   if Player.body:getX() < 1 then -- limimar para o game over
     Game.over = true
+    Game.sounds.gameover:play()
+  end
+
+  -- Calcular o novo estado do player
+  Player.animation.currentTime = Player.animation.currentTime + dt
+  if Player.animation.currentTime >= Player.animation.duration then
+    Player.animation.currentTime = Player.animation.currentTime - Player.animation.duration
   end
 end
 
@@ -142,9 +175,9 @@ function love.draw()
   RGBColor(Colors.Orange)
   love.graphics.polygon("fill", Ground.body:getWorldPoints(Ground.shape:getPoints()))
 
-  -- -- desenha o player na posição x e y
+  -- desenha o player na posição x e y
   RGBColor(Colors.White)
-  love.graphics.draw(Player.image, Player.body:getX(), Player.body:getY(), 0,  1, 1, Player.image:getWidth()/2, Player.image:getHeight()/2)
+  Player:Draw()
 
   -- Desenha todos os obstáculos que estão no array de obstáculos
   DrawObstacles()
@@ -163,15 +196,11 @@ function love.keypressed(key)
 
   -- Player
   if key == Keys.arrowUp then
-    if InGround() then
-      Player.body:applyLinearImpulse(Forces.playerXJump, Forces.playerYJump * -1)
-    end
+    Player:Jump()
   end
 
   if key == Keys.arrowDown then
-    if InAir() then
-      Player.body:applyLinearImpulse(Forces.playerXDown, Forces.playerYDown)
-    end
+    Player:Land()
   end
 end
 
@@ -184,10 +213,7 @@ end
 
 -- Funções auxiliares
 function LoadPlayerAssets()
-  Player.image = love.graphics.newImage(Assets.Player.main)
-  Player.image:setFilter("nearest", "nearest")
-  Player.width = Player.image:getWidth()
-  Player.height = Player.image:getHeight()
+  Player:SetImage(Assets.Player.stopped)
 
   Game.background = love.graphics.newImage(Assets.Wall.past)
 end
@@ -203,12 +229,12 @@ end
 
 function DrawObstacles()
   for _, obstacle in ipairs(Obstacles) do
-      RGBColor(Colors.Black)
-      love.graphics.polygon("fill", obstacle.body:getWorldPoints(obstacle.shape:getPoints()))
+    RGBColor(Colors.White)
+    love.graphics.draw(obstacle.image, obstacle.body:getX(), obstacle.body:getY(), 0, 1, 1, obstacle.image:getWidth()/2, obstacle.image:getHeight()/2)
   end
 end
 
-function DespawnObstacles() 
+function DespawnObstacles()
   for i, obstacle in ipairs(Obstacles) do
     if obstacle.body:getX() < 0 then
       PopObstacle(i)
@@ -216,44 +242,43 @@ function DespawnObstacles()
   end
 end
 
-function AccelerateObstacles() 
+function AccelerateObstacles()
   Forces.obstacleXSpeed = Forces.obstacleXSpeed + Forces.obstacleXAccelerationRate
 
   for _, obstacle in ipairs(Obstacles) do
       obstacle.body:setLinearVelocity(Forces.obstacleXSpeed * -1, Forces.obstacleYSpeed * -1)
   end
-end 
+end
 
 -- Adiciona um obstáculo novo à lista e agenda o próximo
 function PushObstacleAndScheduleNext()
   PushObstacle()
   ScheduleObstacule(love.math.random(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
-end 
+end
 
-function ScheduleObstacule(afterFrames) 
+function ScheduleObstacule(afterFrames)
   obstacleClock = cron.after(afterFrames, callback)
 end
 
-function PushObstacle() 
+function PushObstacle()
   local obstacle = {}
+  obstacle.image = love.graphics.newImage(SelectObstacle())
+  obstacle.image:setFilter("nearest", "nearest")
+
   obstacle.body = love.physics.newBody(World, Game.width, Game.height, "dynamic")
-  obstacle.shape = love.physics.newRectangleShape(0, 0, 10, 15) -- 10x15 tamanho do obstaculo
+  obstacle.shape = love.physics.newRectangleShape(obstacle.image:getWidth(), obstacle.image:getHeight())
   obstacle.fixture = love.physics.newFixture(obstacle.body, obstacle.shape, 5)
   obstacle.fixture:setUserData(Tags.obstacle)
 
   table.insert(Obstacles, obstacle)
-end 
+end
+
+function SelectObstacle()
+  return Assets.Obstacle[love.math.random(0, 1)]
+end
 
 function PopObstacle(i)
   table.remove(Obstacles, i)
-end 
-
-function InGround()
-  return Player.inGround
-end
-
-function InAir()
-  return not Player.inGround
 end
 
 function BeginContact(a, b, coll)
@@ -291,5 +316,82 @@ function PlayerWalk()
 
   if Player.body:getX() + Player.width > Game.width then
     Player.body:setX(Game.width - Player.width)
+  end
+end
+
+function Player:Jump()
+  if Player:InGround() then
+    Player.body:applyLinearImpulse(Forces.playerXJump, Forces.playerYJump * -1)
+    Player:SetImage(Assets.Player.jump)
+    Player.sounds.jump:play()
+  end
+end
+
+function Player:InGround()
+  return Player.inGround
+end
+
+function Player:InAir()
+  return not Player.inGround
+end
+
+function Player:Land()
+  if Player:InAir() then
+    Player.body:applyLinearImpulse(Forces.playerXDown, Forces.playerYDown)
+  end
+end
+
+function Player:SetImage(image)
+  Player.image = love.graphics.newImage(image)
+  Player.image:setFilter("nearest", "nearest")
+
+  Player.width = Player.image:getWidth()
+  Player.height = Player.image:getHeight()
+end
+
+function NewAnimation(image, width, height, duration)
+  local animation = {}
+  animation.spriteSheet = image;
+  animation.quads = {};
+
+  for y = 0, image:getHeight() - height, height do
+    for x = 0, image:getWidth() - width, width do
+      table.insert(animation.quads, love.graphics.newQuad(x, y, width, height, image:getDimensions()))
+    end
+  end
+
+  animation.duration = duration or 1
+  animation.currentTime = 0
+
+  return animation
+end
+
+function Player:Draw()
+  RGBColor(Colors.White)
+
+  if Player:InGround() then
+    local spriteNum = math.floor(Player.animation.currentTime / Player.animation.duration * #Player.animation.quads) + 1
+    love.graphics.draw(
+      Player.animation.spriteSheet,
+      Player.animation.quads[spriteNum],
+      Player.body:getX(),
+      Player.body:getY(),
+      0,
+      1,
+      1,
+      Player.image:getWidth()/2,
+      Player.image:getHeight()/2
+    )
+  else
+    love.graphics.draw(
+      Player.image,
+      Player.body:getX(),
+      Player.body:getY(),
+      0,
+      1,
+      1,
+      Player.image:getWidth()/2,
+      Player.image:getHeight()/2
+    )
   end
 end
