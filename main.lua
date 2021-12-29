@@ -20,7 +20,10 @@ Forces = {
   playerXSpeed = 1,
   obstacleXSpeed = 50,
   obstacleYSpeed = 0,
-  obstacleXAccelerationRate = 0.02
+  obstacleXAccelerationRate = 0.02,
+  powerUpXSpeed = 50,
+  powerUpYSpeed = 0,
+  powerUpXAccelerationRate = 0.02
 }
 
 Dimensions = {
@@ -28,9 +31,11 @@ Dimensions = {
 }
 
 Random = {
-  obstacleSpawnMin = 30,
-  obstacleSpawnMax = 120,
-  obstacleUpdateRate = 1
+  obstacleSpawnMin = 0.5, -- every x seconds
+  obstacleSpawnMax = 2, -- every x seconds
+  powerUpSpawnChance = 35, -- x% in 100
+  powerUpYPositionMin = 50,
+  powerUpYPositionMax = 100
 }
 
 Tags = {
@@ -100,7 +105,8 @@ Ground = {}
 Obstacles = {}
 
 local cron = require 'cron'
-local callback = function() PushObstacleAndScheduleNext() end
+
+local obstacleCallback = function() PushObstacleAndScheduleNext() end
 local obstacleClock
 
 -- Roda quando o jogo abre (Inicialização deve acontecer aqui)
@@ -142,7 +148,7 @@ function love.load()
   love.graphics.setBackgroundColor(1, 1, 1)
 
   -- Agenda o primeiro obstaculo para um valor entre os próximos Random.obstacleSpawnMin e Random.obstacleSpawnMax
-  ScheduleObstacule(love.math.random(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
+  ScheduleObstacule(RandomFloat(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
 
   Game.sounds.gameover = love.audio.newSource(Sounds.Game.gameover, "static")
   Game.sounds.gameover:setVolume(0.5)
@@ -155,8 +161,7 @@ function love.update(dt)
   World:update(dt)
   World:setCallbacks(BeginContact, EndContact, PreSolve, PostSolve)
 
-  -- Atualiza o clock de spawn dos obstaculos a cada frame
-  obstacleClock:update(Random.obstacleUpdateRate)
+  UpdateClocks(dt)
 
   -- Remove os obstáculos que já sairam da tela
   DespawnObstacles()
@@ -179,6 +184,11 @@ function love.update(dt)
 
   Garment.update()
 end
+
+-- Atualiza o clock de spawn dos obstaculos e powerUps a cada frame
+function UpdateClocks(dt) 
+  obstacleClock:update(dt)
+end 
 
 -- Roda a cada frame (Realizar update de tela aqui)
 function love.draw()
@@ -221,20 +231,23 @@ function love.keypressed(key)
     debug.debug()
   end
 
-  -- Player
+  -- Player jump
   if key == Keys.arrowUp then
     Player:Jump()
   end
 
+  -- Player down
   if key == Keys.arrowDown then
     Player:Land()
   end
 
+  -- Restart and game over
   if key == Keys.restart and Game.over then
     Game.over = false
     love.load()
   end
 
+  -- Mute
   if key == Keys.m then
     love.audio.stop()
   end
@@ -307,11 +320,11 @@ end
 -- Adiciona um obstáculo novo à lista e agenda o próximo
 function PushObstacleAndScheduleNext()
   PushObstacle()
-  ScheduleObstacule(love.math.random(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
+  ScheduleObstacule(RandomFloat(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
 end
 
 function ScheduleObstacule(afterFrames)
-  obstacleClock = cron.after(afterFrames, callback)
+  obstacleClock = cron.after(afterFrames, obstacleCallback)
 end
 
 function PushObstacle()
@@ -333,6 +346,10 @@ end
 
 function PopObstacle(i)
   table.remove(Obstacles, i)
+end
+
+function RandomFloat(lower, greater)
+  return lower + math.random() * (greater - lower);
 end
 
 function BeginContact(a, b, coll)
