@@ -41,7 +41,8 @@ Random = {
 Tags = {
   ground = "Ground",
   player = "Player",
-  obstacle = "Obstacle"
+  obstacle = "Obstacle",
+  powerUp = "PowerUp",
 }
 
 Keys = {
@@ -69,7 +70,7 @@ Assets = {
     [1] = "assets/images/percent_biggest.png",
     [2] = "assets/images/bundle.png"
   },
-  Points = {
+  PowerUp = {
     tshirt = "assets/images/tshirt.png",
   }
 }
@@ -353,7 +354,7 @@ function RandomFloat(lower, greater)
 end
 
 function BeginContact(a, b, coll)
-  if a:getUserData() == Tags.ground and b:getUserData() == Tags.player then
+  if (a:getUserData() == Tags.ground and b:getUserData() == Tags.player) or (a:getUserData() == Tags.player and b:getUserData() == Tags.obstacle) then
     Player.inGround = true
   end
 
@@ -361,7 +362,7 @@ function BeginContact(a, b, coll)
 end
 
 function EndContact(a, b, coll)
-  if a:getUserData() == Tags.ground and b:getUserData() == Tags.player then
+  if (a:getUserData() == Tags.ground and b:getUserData() == Tags.player) or (a:getUserData() == Tags.player and b:getUserData() == Tags.obstacle) then
     Player.inGround = false
   end
 end
