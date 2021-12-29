@@ -517,10 +517,6 @@ function DrawPoints()
   love.graphics.print(Player.score, 50, 26)
 
   local magicNumber = math.random(0, 2000)
-
-  if magicNumber < 10 then
-
-  end
 end
 
 function LoadPlayerAssets()
