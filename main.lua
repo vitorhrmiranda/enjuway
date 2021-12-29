@@ -11,7 +11,8 @@ Game = {
   over = false,
   background = nil,
   sounds = {},
-  state = 'menu'
+  state = 'menu',
+  scenery = 0 -- 0 - Passado | 1 - Presente | 2 - Futuro
 }
 
 Forces = {
@@ -23,9 +24,6 @@ Forces = {
   playerXDown = 0,
   playerXSpeed = 1,
   groundYSpeed = 0,
-  powerUpXSpeed = 50,
-  powerUpYSpeed = 0,
-  powerUpXAccelerationRate = 0.02,
   powerUpXBoostSpeed = 0.5, -- extra speed
   powerUpXMaxBoost = 1, -- max boost
   powerUpBoostDecayRate = 0.1 -- will decay x per second
@@ -114,11 +112,6 @@ Assets = {
     sparkles = "assets/images/spark.png"
   },
   GroundTiles = {
-    ScenarioTransition = {
-      [0] = "assets/images/ground_transition_one.png",
-      [1] = "assets/images/ground_transition_two.png",
-      [2] = "assets/images/ground_transition_three.png"
-    },
     ScenarioOne = {
       [0] = "assets/images/ground_one_one.png",
       [1] = "assets/images/ground_one_two.png",
@@ -182,6 +175,9 @@ local garmentClock = cron.every(1, garmentCallback) -- executes every second
 
 local powerUpCallback = function() TryPushPowerUp() end
 local powerUpClock = cron.every(1, powerUpCallback) -- executes every second
+
+local sceneryCallback = function() NextScenery() end
+local sceneryClock = cron.every(10, sceneryCallback) -- executes every second
 
 -- Roda quando o jogo abre (Inicialização deve acontecer aqui)
 function love.load()
@@ -391,6 +387,7 @@ function UpdateClocks(dt)
   obstacleClock:update(dt)
   garmentClock:update(dt)
   powerUpClock:update(dt)
+  sceneryClock:update(dt)
 end
 
 function LoadBackgroundAssets()
@@ -402,13 +399,29 @@ function LoadBackgroundAssets()
 end
 
 function LoadGroundAssets()
-  Game.scenary = {}
+  Game.scenarios = {}
 
-  Game.scenary[0] = {
+  Game.scenarios[0] = {
     ground = {
-      [0] = LoadImage(Assets.GroundTiles.ScenarioOne[0]),
+      [0] = LoadImage(Assets.GroundTiles.ScenarioOne[1]),
       [1] = LoadImage(Assets.GroundTiles.ScenarioOne[1]),
-      [2] = LoadImage(Assets.GroundTiles.ScenarioOne[2]),
+      [2] = LoadImage(Assets.GroundTiles.ScenarioOne[1]),
+    }
+  }
+
+  Game.scenarios[1] = {
+    ground = {
+      [0] = LoadImage(Assets.GroundTiles.ScenarioTwo[0]),
+      [1] = LoadImage(Assets.GroundTiles.ScenarioTwo[0]),
+      [2] = LoadImage(Assets.GroundTiles.ScenarioTwo[0]),
+    }
+  }
+
+  Game.scenarios[2] = {
+    ground = {
+      [0] = LoadImage(Assets.GroundTiles.ScenarioThree[0]),
+      [1] = LoadImage(Assets.GroundTiles.ScenarioThree[0]),
+      [2] = LoadImage(Assets.GroundTiles.ScenarioThree[0]),
     }
   }
 end
@@ -443,7 +456,7 @@ function DrawGroundTiles()
 end
 
 function SelectGround()
-  return Game.scenary[0].ground[love.math.random(0, #Assets.GroundTiles.ScenarioOne)]
+  return Game.scenarios[Game.scenery].ground[love.math.random(0, 0)]
 end
 
 function AddGroundTile(tile)
@@ -721,6 +734,14 @@ function love.mousepressed(x, y)
   end
 end
 
+function NextScenery() 
+  if Game.scenery == 2 then
+    Game.scenery = 0
+  else 
+    Game.scenery = Game.scenery + 1
+  end 
+end 
+
 function LoadImage(name)
   local img = love.graphics.newImage(name)
   img:setFilter("nearest", "nearest")
@@ -737,6 +758,9 @@ end
 
 function ResetGameParams()
   Player.score = 0
+  Game.scenery = 0
+  Ground = {}
+  GroundTiles = {}
   Obstacles = {}
   WorldForces = {
     obstacleXSpeed = 50,
@@ -748,5 +772,8 @@ function ResetGameParams()
     garmentYSpeed = 0,
     groundXSpeed = 50,
     groundXAccelerationRate = 0.02,
+    powerUpXSpeed = 50,
+    powerUpYSpeed = 0,
+    powerUpXAccelerationRate = 0.02,
   }
 end

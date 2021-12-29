@@ -60,9 +60,10 @@ function DespawnPowerUps()
 end
 
 function AcceleratePowerUps()
-  Forces.powerUpXSpeed = Forces.powerUpXSpeed + Forces.powerUpXAccelerationRate
+  WorldForces.powerUpXSpeed = WorldForces.powerUpXSpeed + WorldForces.powerUpXAccelerationRate
+
   for _, instance in ipairs(ActivePowerUp) do
-      instance.physics.body:setLinearVelocity(Forces.powerUpXSpeed * -1, Forces.powerUpYSpeed * -1)
+      instance.physics.body:setLinearVelocity(WorldForces.powerUpXSpeed * -1, WorldForces.powerUpYSpeed * -1)
   end
 end
 
