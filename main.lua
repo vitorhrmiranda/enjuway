@@ -1,4 +1,6 @@
 local Garment = require("garment")
+local PowerUp = require("powerup")
+local cron = require ("cron")
 
 Game = {
   width = 320,
@@ -21,9 +23,15 @@ Forces = {
   obstacleXSpeed = 50,
   obstacleYSpeed = 0,
   obstacleXAccelerationRate = 0.02,
+  garmentXSpeed = 50,
+  garmentYSpeed = 0,
+  garmentXAccelerationRate = 0.02,
   powerUpXSpeed = 50,
   powerUpYSpeed = 0,
-  powerUpXAccelerationRate = 0.02
+  powerUpXAccelerationRate = 0.02,
+  powerUpXBoostSpeed = 0.5, -- extra speed
+  powerUpXMaxBoost = 1, -- max boost 
+  powerUpBoostDecayRate = 0.1 -- will decay x per second
 }
 
 Dimensions = {
@@ -31,9 +39,12 @@ Dimensions = {
 }
 
 Random = {
+  instanceIdMin = 0,
+  instanceIdMax = 10000000,
   obstacleSpawnMin = 0.5, -- every x seconds
   obstacleSpawnMax = 2, -- every x seconds
-  powerUpSpawnChance = 40, -- x% in 100
+  garmentSpawnChance = 40, -- x% in 100
+  powerUpSpawnChance = 5, -- x% in 100
 }
 
 Tags = {
@@ -102,6 +113,7 @@ Sounds = {
   Player = {
     jump = "assets/sounds/jump.wav",
     collect = "assets/sounds/pickupCoin.wav",
+    powerUp = "assets/sounds/powerUp.wav",
   }
 }
 
@@ -119,6 +131,7 @@ Colors = {
 Player = {
   score = 0,
   velx = Forces.playerXSpeed,
+  currentXBoost = 0,
   inGround = false,
   animation = {},
   sounds = {},
@@ -127,10 +140,11 @@ Player = {
 Ground = {}
 Obstacles = {}
 
-local cron = require 'cron'
-
 local obstacleCallback = function() PushObstacleAndScheduleNext() end
 local obstacleClock
+
+local garmentCallback = function() TryPushGarment() end
+local garmentClock = cron.every(1, garmentCallback) -- executes every second
 
 local powerUpCallback = function() TryPushPowerUp() end
 local powerUpClock = cron.every(1, powerUpCallback) -- executes every second
@@ -160,12 +174,12 @@ function love.load()
   Ground.body = love.physics.newBody(World, 0, Game.height, "static")
 	Ground.shape = love.physics.newRectangleShape(Game.width * Game.scale, 5)
 	Ground.fixture = love.physics.newFixture(Ground.body, Ground.shape)
-  Ground.fixture:setUserData(Tags.ground)
+  Ground.fixture:setUserData({ tag = Tags.ground })
 
   Player.body = love.physics.newBody(World, 50, 5, "dynamic") -- player começa caindo
 	Player.shape = love.physics.newRectangleShape(Player.image:getWidth(), Player.image:getHeight())
   Player.fixture = love.physics.newFixture(Player.body, Player.shape)
-  Player.fixture:setUserData(Tags.player)
+  Player.fixture:setUserData({ tag = Tags.player })
 
   Player.animation = NewAnimation(LoadImage(Assets.Player.animation), 16, 16, 1)
   Player.sounds.jump = love.audio.newSource(Sounds.Player.jump, "static")
@@ -174,10 +188,13 @@ function love.load()
   Player.sounds.collect = love.audio.newSource(Sounds.Player.collect, "static")
   Player.sounds.collect:setVolume(0.05)
 
+  Player.sounds.powerUp = love.audio.newSource(Sounds.Player.powerUp, "static")
+  Player.sounds.powerUp:setVolume(0.05)
+
   love.graphics.setBackgroundColor(1, 1, 1)
 
   -- Agenda o primeiro obstaculo para um valor entre os próximos Random.obstacleSpawnMin e Random.obstacleSpawnMax
-  ScheduleObstacule(RandomFloat(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
+  ScheduleObstacle(RandomFloat(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
 
   Game.sounds.gameover = love.audio.newSource(Sounds.Game.gameover, "static")
   Game.sounds.gameover:setVolume(0.5)
@@ -185,6 +202,9 @@ function love.load()
   Game.ScoreAsset = LoadImage(Assets.Game.score)
 
   Garment:load()
+
+  PowerUp:load()
+
   LoadBackgroundAssets()
 end
 
@@ -214,7 +234,8 @@ function love.update(dt)
     Player.animation.currentTime = Player.animation.currentTime - Player.animation.duration
   end
 
-  Garment.update()
+  Garment:update()
+  PowerUp:update(dt)
 end
 
 -- Roda a cada frame (Realizar update de tela aqui)
@@ -247,6 +268,8 @@ function love.draw()
 
   -- Desenha as vestimentas
   Garment.draw()
+
+  PowerUp.draw()
 
   DrawPoints()
 end
@@ -302,6 +325,7 @@ end
 -- Atualiza o clock de spawn dos obstaculos e powerUps a cada frame
 function UpdateClocks(dt)
   obstacleClock:update(dt)
+  garmentClock:update(dt)
   powerUpClock:update(dt)
 end
 
@@ -386,10 +410,10 @@ end
 -- Adiciona um obstáculo novo à lista e agenda o próximo
 function PushObstacleAndScheduleNext()
   PushObstacle()
-  ScheduleObstacule(RandomFloat(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
+  ScheduleObstacle(RandomFloat(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
 end
 
-function ScheduleObstacule(afterFrames)
+function ScheduleObstacle(afterFrames)
   obstacleClock = cron.after(afterFrames, obstacleCallback)
 end
 
@@ -400,7 +424,7 @@ function PushObstacle()
   obstacle.body = love.physics.newBody(World, Game.width, Game.height, "dynamic")
   obstacle.shape = love.physics.newRectangleShape(obstacle.image:getWidth(), obstacle.image:getHeight())
   obstacle.fixture = love.physics.newFixture(obstacle.body, obstacle.shape, 5)
-  obstacle.fixture:setUserData(Tags.obstacle)
+  obstacle.fixture:setUserData({ tag = Tags.obstacle })
 
   table.insert(Obstacles, obstacle)
 end
@@ -413,11 +437,19 @@ function PopObstacle(i)
   table.remove(Obstacles, i)
 end
 
+function TryPushGarment()
+  local randomNumber = love.math.random(0, 100)
+
+  if randomNumber <= Random.garmentSpawnChance then
+    Garment.new()
+  end
+end
+
 function TryPushPowerUp()
   local randomNumber = love.math.random(0, 100)
 
   if randomNumber <= Random.powerUpSpawnChance then
-    Garment.new()
+    PowerUp.new()
   end
 end
 
@@ -426,15 +458,17 @@ function RandomFloat(lower, greater)
 end
 
 function BeginContact(a, b, coll)
-  if (a:getUserData() == Tags.ground and b:getUserData() == Tags.player) or (a:getUserData() == Tags.player and b:getUserData() == Tags.obstacle) then
+  if (a:getUserData().tag == Tags.ground and b:getUserData().tag == Tags.player) or (a:getUserData().tag == Tags.player and b:getUserData().tag == Tags.obstacle) then
     Player.inGround = true
   end
 
   if Garment.beginContact(a, b, coll) then return end
+
+  if PowerUp.beginContact(a, b, coll) then return end
 end
 
 function EndContact(a, b, coll)
-  if (a:getUserData() == Tags.ground and b:getUserData() == Tags.player) or (a:getUserData() == Tags.player and b:getUserData() == Tags.obstacle) then
+  if (a:getUserData().tag == Tags.ground and b:getUserData().tag == Tags.player) or (a:getUserData().tag == Tags.player and b:getUserData().tag == Tags.obstacle) then
     Player.inGround = false
   end
 end
@@ -447,13 +481,17 @@ function PostSolve(a, b, coll, normalimpulse, tangentimpulse)
 
 end
 
+function GetPlayerXSpeed() 
+  return Player.velx + Player.currentXBoost
+end
+
 function PlayerWalk()
   if love.keyboard.isDown(Keys.arrowLeft) then
-    Player.body:setX(Player.body:getX() - Player.velx)
+    Player.body:setX(Player.body:getX() - GetPlayerXSpeed())
   end
 
   if love.keyboard.isDown(Keys.arrowRight) then
-    Player.body:setX(Player.body:getX() + Player.velx)
+    Player.body:setX(Player.body:getX() + GetPlayerXSpeed())
   end
 
   if Player.body:getX() < 0 then

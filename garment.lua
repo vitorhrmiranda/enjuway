@@ -7,7 +7,7 @@ function Garment:new()
 
   instance.image = LoadImage(Assets.Garment[love.math.random(0, #Assets.Garment)])
 
-  instance.id = love.math.random(0, 1000000)
+  instance.id = love.math.random(Random.instanceIdMin, Random.instanceIdMax)
   instance.x = Game.width + instance.image:getWidth()
   instance.y = Game.height/RandonHeight()
   instance.scaleX = 1
@@ -17,7 +17,7 @@ function Garment:new()
   instance.physics.shape = love.physics.newRectangleShape(instance.image:getWidth(), instance.image:getHeight())
   instance.physics.fixture = love.physics.newFixture(instance.physics.body, instance.physics.shape)
   instance.physics.fixture:setSensor(true)
-  instance.physics.fixture:setUserData(Tags.garment)
+  instance.physics.fixture:setUserData({ tag = Tags.garment, id = instance.id })
 
   table.insert(ActiveGarment, instance)
 end
@@ -42,30 +42,38 @@ function DespawnGarments()
   for i, instance in ipairs(ActiveGarment) do
     if instance.physics.body:getX() < 0 then
       DestroyGarment(instance)
-      PopGarment(GetIndex(ActiveGarment, instance))
+      PopGarment(GetGarmentTableIndex(instance))
     end
   end
 end
 
 function AccelerateGarments()
-  Forces.powerUpXSpeed = Forces.powerUpXSpeed + Forces.powerUpXAccelerationRate
+  Forces.garmentXSpeed = Forces.garmentXSpeed + Forces.garmentXAccelerationRate
   for _, instance in ipairs(ActiveGarment) do
-      instance.physics.body:setLinearVelocity(Forces.powerUpXSpeed * -1, Forces.powerUpYSpeed * -1)
+      instance.physics.body:setLinearVelocity(Forces.garmentXSpeed * -1, Forces.garmentYSpeed * -1)
   end
 end
 
-function Collect(instance)
+function Garment:collect()
   Player.score = Player.score + 1
   Player.sounds.collect:play()
 
-  DestroyGarment(instance)
-  PopGarment(GetIndex(ActiveGarment, instance))
+  DestroyGarment(self)
+  PopGarment(GetGarmentTableIndex(self))
 end
 
-function GetIndex(table, element)
-  for index, value in pairs(table) do
+function GetGarmentTableIndex(element)
+  for index, value in ipairs(ActiveGarment) do
     if value.id == element.id then
       return index
+    end
+  end
+end
+
+function GetGarmentById(id)
+  for index, value in ipairs(ActiveGarment) do
+    if value.id == id then
+      return value
     end
   end
 end
@@ -83,13 +91,19 @@ function Garment:destroy()
 end
 
 function Garment.beginContact(a, b, collision)
-  for i,instance in ipairs(ActiveGarment) do
-    if a == instance.physics.fixture or b == instance.physics.fixture then
-      if a == Player.fixture or b == Player.fixture then
-        Collect(instance)
-        return true
-      end
-    end
+  local instance = nil
+
+  if a:getUserData().tag == Tags.garment and b:getUserData().tag == Tags.player then
+    instance = a
+  elseif a:getUserData().tag == Tags.player and b:getUserData().tag == Tags.garment then 
+    instance = b
+  end   
+
+  if (instance ~= nil) then 
+    local garment = GetGarmentById(instance:getUserData().id)
+    garment:collect()
+
+    return true
   end
 end
 
