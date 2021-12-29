@@ -10,16 +10,13 @@ function button_spawn(x, y, text, id)
 end
 
 function button_draw()
-    love.graphics.setColor(1, 1, 1, 0.5)
-    love.graphics.draw(love.graphics.newImage('assets/images/bg-wall-1.jpg'), 0, 0, 0, 4)
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.draw(love.graphics.newImage('assets/images/bg-main-menu.png'), 0, 0, 0, 3.2, 3.6)
 
     for i, v in ipairs(button) do
         love.graphics.setColor(0, 0, 0)
-        love.graphics.print(v.text, v.x, v.y, 0, 1.5)
+        love.graphics.print(v.text, v.x, v.y, 0, 2)
     end
-
-    love.graphics.setColor(218, 0, 99)
-    love.graphics.print('enjuway', 600, 100, 0, 5)
 end
 
 function button_click(x, y)

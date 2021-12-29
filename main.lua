@@ -166,8 +166,7 @@ function love.load()
   Garment.new()
   Game.ScoreAsset = love.graphics.newImage(Assets.Game.score)
 
-  button_spawn(765, 400, "Start", 'start')
-  button_spawn(770, 475, "Exit", 'exit')
+  button_spawn(797, 300, "Start", 'start')
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
