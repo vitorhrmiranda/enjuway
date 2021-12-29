@@ -274,13 +274,6 @@ function love.draw()
   DrawPoints()
 end
 
--- Atualiza o clock de spawn dos obstaculos e garments a cada frame
-function UpdateClocks(dt)
-  obstacleClock:update(dt)
-  garmentClock:update(dt)
-  powerUpClock:update(dt)
-end
-
 function love.keypressed(key)
   -- ESC para sair do jogo
   if key == Keys.escape then
@@ -332,6 +325,7 @@ end
 -- Atualiza o clock de spawn dos obstaculos e powerUps a cada frame
 function UpdateClocks(dt)
   obstacleClock:update(dt)
+  garmentClock:update(dt)
   powerUpClock:update(dt)
 end
 
