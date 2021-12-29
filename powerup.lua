@@ -1,11 +1,11 @@
-local Garment = {}
-Garment.__index = Garment
-local ActiveGarment = {}
+local PowerUp = {}
+PowerUp.__index = PowerUp
+local ActivePowerUp = {}
 
-function Garment:new()
-  local instance = setmetatable({}, Garment)
+function PowerUp:new()
+  local instance = setmetatable({}, PowerUp)
 
-  instance.image = love.graphics.newImage(Assets.Garment.tshirt)
+  instance.image = love.graphics.newImage(Assets.PowerUp.sparkles)
   instance.image:setFilter("nearest", "nearest")
 
   instance.id = love.math.random(0, 1000000)
@@ -18,40 +18,40 @@ function Garment:new()
   instance.physics.shape = love.physics.newRectangleShape(instance.image:getWidth(), instance.image:getHeight())
   instance.physics.fixture = love.physics.newFixture(instance.physics.body, instance.physics.shape)
   instance.physics.fixture:setSensor(true)
-  instance.physics.fixture:setUserData(Tags.garment)
+  instance.physics.fixture:setUserData(Tags.powerUp)
 
-  table.insert(ActiveGarment, instance)
+  table.insert(ActivePowerUp, instance)
 end
 
-function Garment:load()
-  ActiveGarment = {}
+function PowerUp:load()
+  ActivePowerUp = {}
 end
 
-function Garment:update()
-  DespawnGarments()
-  AccelerateGarments()
+function PowerUp:update()
+  DespawnPowerUps()
+  AcceleratePowerUps()
 end
 
-function Garment:draw()
-  for _, instance in ipairs(ActiveGarment) do
+function PowerUp:draw()
+  for _, instance in ipairs(ActivePowerUp) do
     RGBColor(Colors.White)
     love.graphics.draw(instance.image, instance.physics.body:getX(), instance.physics.body:getY(), 0, 1, 1, instance.image:getWidth()/2, instance.image:getHeight()/2)
   end
 end
 
-function DespawnGarments()
-  for i, instance in ipairs(ActiveGarment) do
+function DespawnPowerUps()
+  for i, instance in ipairs(ActivePowerUp) do
     if instance.physics.body:getX() < 0 then
-      DestroyGarment(instance)
-      PopGarment(GetIndex(ActiveGarment, instance))
+      DestroyPowerUp(instance)
+      PopPowerUp(GetIndex(ActivePowerUp, instance))
     end
   end
 end
 
-function AccelerateGarments()
-  Forces.garmentXSpeed = Forces.garmentXSpeed + Forces.garmentXAccelerationRate
-  for _, instance in ipairs(ActiveGarment) do
-      instance.physics.body:setLinearVelocity(Forces.garmentXSpeed * -1, Forces.garmentYSpeed * -1)
+function AcceleratePowerUps()
+  Forces.powerUpXSpeed = Forces.powerUpXSpeed + Forces.powerUpXAccelerationRate
+  for _, instance in ipairs(ActivePowerUp) do
+      instance.physics.body:setLinearVelocity(Forces.powerUpXSpeed * -1, Forces.powerUpYSpeed * -1)
   end
 end
 
@@ -59,8 +59,8 @@ function Collect(instance)
   Player.score = Player.score + 1
   Player.sounds.collect:play()
 
-  DestroyGarment(instance)
-  PopGarment(GetIndex(ActiveGarment, instance))
+  DestroyPowerUp(instance)
+  PopPowerUp(GetIndex(ActivePowerUp, instance))
 end
 
 function GetIndex(table, element)
@@ -71,20 +71,20 @@ function GetIndex(table, element)
   end
 end
 
-function DestroyGarment(instance)
+function DestroyPowerUp(instance)
   instance.physics.body:destroy()
 end
 
-function PopGarment(i)
-  table.remove(ActiveGarment, i)
+function PopPowerUp(i)
+  table.remove(ActivePowerUp, i)
 end
 
-function Garment:destroy()
+function PowerUp:destroy()
   self.physics.body:destroy()
 end
 
-function Garment.beginContact(a, b, collision)
-  for i,instance in ipairs(ActiveGarment) do
+function PowerUp.beginContact(a, b, collision)
+  for i,instance in ipairs(ActivePowerUp) do
     if a == instance.physics.fixture or b == instance.physics.fixture then
       if a == Player.fixture or b == Player.fixture then
         Collect(instance)
@@ -94,4 +94,4 @@ function Garment.beginContact(a, b, collision)
   end
 end
 
-return Garment
+return PowerUp

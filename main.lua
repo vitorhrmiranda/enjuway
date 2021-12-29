@@ -1,4 +1,5 @@
 local Garment = require("garment")
+local PowerUp = require("powerup")
 
 Game = {
   width = 320,
@@ -21,9 +22,12 @@ Forces = {
   obstacleXSpeed = 50,
   obstacleYSpeed = 0,
   obstacleXAccelerationRate = 0.02,
+  garmentXSpeed = 50,
+  garmentYSpeed = 0,
+  garmentXAccelerationRate = 0.02,
   powerUpXSpeed = 50,
   powerUpYSpeed = 0,
-  powerUpXAccelerationRate = 0.02
+  powerUpXAccelerationRate = 0.02,
 }
 
 Dimensions = {
@@ -33,6 +37,7 @@ Dimensions = {
 Random = {
   obstacleSpawnMin = 0.5, -- every x seconds
   obstacleSpawnMax = 2, -- every x seconds
+  garmentSpawnChance = 40, -- x% in 100
   powerUpSpawnChance = 40, -- x% in 100
 }
 
@@ -117,6 +122,9 @@ local cron = require 'cron'
 local obstacleCallback = function() PushObstacleAndScheduleNext() end
 local obstacleClock
 
+local garmentCallback = function() TryPushGarment() end
+local garmentClock = cron.every(1, garmentCallback) -- executes every second
+
 local powerUpCallback = function() TryPushPowerUp() end
 local powerUpClock = cron.every(1, powerUpCallback) -- executes every second
 
@@ -170,6 +178,7 @@ function love.load()
   Game.ScoreAsset = love.graphics.newImage(Assets.Game.score)
 
   Garment:load()
+  PowerUp:load()
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -199,11 +208,13 @@ function love.update(dt)
   end
 
   Garment.update()
+  PowerUp.update()
 end
 
--- Atualiza o clock de spawn dos obstaculos e powerUps a cada frame
+-- Atualiza o clock de spawn dos obstaculos e garments a cada frame
 function UpdateClocks(dt)
   obstacleClock:update(dt)
+  garmentClock:update(dt)
   powerUpClock:update(dt)
 end
 
@@ -235,6 +246,8 @@ function love.draw()
 
   -- Desenha as vestimentas
   Garment.draw()
+
+  PowerUp.draw()
 
   DrawPoints()
 end
@@ -374,11 +387,19 @@ function PopObstacle(i)
   table.remove(Obstacles, i)
 end
 
+function TryPushGarment()
+  local randomNumber = love.math.random(0, 100)
+
+  if randomNumber <= Random.garmentSpawnChance then
+    Garment.new()
+  end
+end
+
 function TryPushPowerUp()
   local randomNumber = love.math.random(0, 100)
 
   if randomNumber <= Random.powerUpSpawnChance then
-    Garment.new()
+    PowerUp.new()
   end
 end
 
@@ -392,6 +413,8 @@ function BeginContact(a, b, coll)
   end
 
   if Garment.beginContact(a, b, coll) then return end
+
+  if PowerUp.beginContact(a, b, coll) then return end
 end
 
 function EndContact(a, b, coll)
