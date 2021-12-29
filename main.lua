@@ -1,5 +1,6 @@
 local Garment = require("garment")
 local PowerUp = require("powerup")
+local cron = require ("cron")
 
 Game = {
   width = 320,
@@ -28,6 +29,9 @@ Forces = {
   powerUpXSpeed = 50,
   powerUpYSpeed = 0,
   powerUpXAccelerationRate = 0.02,
+  powerUpXBoost = 100,
+  powerUpYBoost = 0,
+  powerUpBoostDecayRate = 0.1 -- will decay x per second
 }
 
 Dimensions = {
@@ -35,10 +39,12 @@ Dimensions = {
 }
 
 Random = {
+  instanceIdMin = 0,
+  instanceIdMax = 10000000,
   obstacleSpawnMin = 0.5, -- every x seconds
   obstacleSpawnMax = 2, -- every x seconds
   garmentSpawnChance = 40, -- x% in 100
-  powerUpSpawnChance = 40, -- x% in 100
+  powerUpSpawnChance = 5, -- x% in 100
 }
 
 Tags = {
@@ -117,8 +123,6 @@ Player = {
 Ground = {}
 Obstacles = {}
 
-local cron = require 'cron'
-
 local obstacleCallback = function() PushObstacleAndScheduleNext() end
 local obstacleClock
 
@@ -153,12 +157,12 @@ function love.load()
   Ground.body = love.physics.newBody(World, 0, Game.height, "static")
 	Ground.shape = love.physics.newRectangleShape(Game.width * Game.scale, 5)
 	Ground.fixture = love.physics.newFixture(Ground.body, Ground.shape)
-  Ground.fixture:setUserData(Tags.ground)
+  Ground.fixture:setUserData({ tag = Tags.ground })
 
   Player.body = love.physics.newBody(World, 50, 5, "dynamic") -- player começa caindo
 	Player.shape = love.physics.newRectangleShape(Player.image:getWidth(), Player.image:getHeight())
   Player.fixture = love.physics.newFixture(Player.body, Player.shape)
-  Player.fixture:setUserData(Tags.player)
+  Player.fixture:setUserData({ tag = Tags.player })
 
   Player.animation = NewAnimation(love.graphics.newImage(Assets.Player.animation), 16, 16, 1)
   Player.sounds.jump = love.audio.newSource(Sounds.Player.jump, "static")
@@ -170,7 +174,7 @@ function love.load()
   love.graphics.setBackgroundColor(1, 1, 1)
 
   -- Agenda o primeiro obstaculo para um valor entre os próximos Random.obstacleSpawnMin e Random.obstacleSpawnMax
-  ScheduleObstacule(RandomFloat(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
+  ScheduleObstacle(RandomFloat(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
 
   Game.sounds.gameover = love.audio.newSource(Sounds.Game.gameover, "static")
   Game.sounds.gameover:setVolume(0.5)
@@ -207,8 +211,8 @@ function love.update(dt)
     Player.animation.currentTime = Player.animation.currentTime - Player.animation.duration
   end
 
-  Garment.update()
-  PowerUp.update()
+  Garment:update()
+  PowerUp:update(dt)
 end
 
 -- Atualiza o clock de spawn dos obstaculos e garments a cada frame
@@ -359,10 +363,10 @@ end
 -- Adiciona um obstáculo novo à lista e agenda o próximo
 function PushObstacleAndScheduleNext()
   PushObstacle()
-  ScheduleObstacule(RandomFloat(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
+  ScheduleObstacle(RandomFloat(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
 end
 
-function ScheduleObstacule(afterFrames)
+function ScheduleObstacle(afterFrames)
   obstacleClock = cron.after(afterFrames, obstacleCallback)
 end
 
@@ -374,7 +378,7 @@ function PushObstacle()
   obstacle.body = love.physics.newBody(World, Game.width, Game.height, "dynamic")
   obstacle.shape = love.physics.newRectangleShape(obstacle.image:getWidth(), obstacle.image:getHeight())
   obstacle.fixture = love.physics.newFixture(obstacle.body, obstacle.shape, 5)
-  obstacle.fixture:setUserData(Tags.obstacle)
+  obstacle.fixture:setUserData({ tag = Tags.obstacle })
 
   table.insert(Obstacles, obstacle)
 end
@@ -408,7 +412,7 @@ function RandomFloat(lower, greater)
 end
 
 function BeginContact(a, b, coll)
-  if (a:getUserData() == Tags.ground and b:getUserData() == Tags.player) or (a:getUserData() == Tags.player and b:getUserData() == Tags.obstacle) then
+  if (a:getUserData().tag == Tags.ground and b:getUserData().tag == Tags.player) or (a:getUserData().tag == Tags.player and b:getUserData().tag == Tags.obstacle) then
     Player.inGround = true
   end
 
@@ -418,7 +422,7 @@ function BeginContact(a, b, coll)
 end
 
 function EndContact(a, b, coll)
-  if (a:getUserData() == Tags.ground and b:getUserData() == Tags.player) or (a:getUserData() == Tags.player and b:getUserData() == Tags.obstacle) then
+  if (a:getUserData().tag == Tags.ground and b:getUserData().tag == Tags.player) or (a:getUserData().tag == Tags.player and b:getUserData().tag == Tags.obstacle) then
     Player.inGround = false
   end
 end
