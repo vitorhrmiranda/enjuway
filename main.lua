@@ -406,25 +406,25 @@ function LoadGroundAssets()
 
   Game.scenarios[0] = {
     ground = {
-      [0] = LoadImage(Assets.GroundTiles.ScenarioOne[0]),
+      [0] = LoadImage(Assets.GroundTiles.ScenarioOne[1]),
       [1] = LoadImage(Assets.GroundTiles.ScenarioOne[1]),
-      [2] = LoadImage(Assets.GroundTiles.ScenarioOne[2]),
+      [2] = LoadImage(Assets.GroundTiles.ScenarioOne[1]),
     }
   }
 
   Game.scenarios[1] = {
     ground = {
       [0] = LoadImage(Assets.GroundTiles.ScenarioTwo[0]),
-      [1] = LoadImage(Assets.GroundTiles.ScenarioTwo[1]),
-      [2] = LoadImage(Assets.GroundTiles.ScenarioTwo[2]),
+      [1] = LoadImage(Assets.GroundTiles.ScenarioTwo[0]),
+      [2] = LoadImage(Assets.GroundTiles.ScenarioTwo[0]),
     }
   }
 
   Game.scenarios[2] = {
     ground = {
       [0] = LoadImage(Assets.GroundTiles.ScenarioThree[0]),
-      [1] = LoadImage(Assets.GroundTiles.ScenarioThree[1]),
-      [2] = LoadImage(Assets.GroundTiles.ScenarioThree[2]),
+      [1] = LoadImage(Assets.GroundTiles.ScenarioThree[0]),
+      [2] = LoadImage(Assets.GroundTiles.ScenarioThree[0]),
     }
   }
 end
@@ -459,7 +459,7 @@ function DrawGroundTiles()
 end
 
 function SelectGround()
-  return Game.scenarios[Game.scenery].ground[love.math.random(0, 2)]
+  return Game.scenarios[Game.scenery].ground[love.math.random(0, 0)]
 end
 
 function AddGroundTile(tile)
@@ -761,6 +761,9 @@ end
 
 function ResetGameParams()
   Player.score = 0
+  Game.scenery = 0
+  Ground = {}
+  GroundTiles = {}
   Obstacles = {}
   WorldForces = {
     obstacleXSpeed = 50,
