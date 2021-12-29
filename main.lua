@@ -7,23 +7,79 @@ Game = {
   background = nil
 }
 
+Forces = {
+  hGravity = 0,
+  vGravity = 9.81,
+  playerYJump = 100,
+  playerXJump = 0,
+  playerYDown = 100,
+  playerXDown = 0,
+  playerXSpeed = 1,
+  obstacleXSpeed = 50,
+  obstacleYSpeed = 0,
+  obstacleXAccelerationRate = 0.02
+}
+
+Dimensions = {
+  meter = 18 -- the height of a meter our worlds will be 64px
+}
+
+Random = {
+  obstacleSpawnMin = 30, 
+  obstacleSpawnMax = 120,
+  obstacleUpdateRate = 1
+}
+
+Tags = {
+  ground = "Ground",
+  player = "Player",
+  obstacle = "Obstacle"
+}
+
+Keys = {
+  esc = "escape",
+  controlRight = "rctrl",
+  arrowUp = "up",
+  arrowLeft = "left",
+  arrowDown = "down",
+  arrowRight = "right"
+}
+
+Assets = {
+  Player = {
+    main = "assets/images/player.png"
+  },
+  Wall = {
+    past = "assets/images/bg-wall-1.jpg"
+  }
+}
+
+Colors = {
+  rgb = 255,
+  Black = { r = 0, g = 0, b = 0 },
+  Orange = { r = 208, g = 98, b = 36 },
+  Red = { r = 255, g = 0, b = 0 },
+  White = { r = 255, g = 255, b = 255 }
+}
+
+local Obstacles = {}
+
+local cron = require 'cron'
+local callback = function() PushObstacleAndScheduleNext() end
+local obstacleClock
+
 -- Roda quando o jogo abre (Inicialização deve acontecer aqui)
 function love.load()
-  -- the height of a meter our worlds will be 64px
-  local meter  = 18
-  love.physics.setMeter(meter)
+  love.physics.setMeter(Dimensions.meter)
+
   -- create a world for the bodies to exist in with horizontal gravity of 0 and vertical gravity of 9.81
-  World = love.physics.newWorld(0, 9.81*meter, true)
+  World = love.physics.newWorld(Forces.hGravity, Forces.vGravity * Dimensions.meter, true)
   Player = {
-    velx = 1,
+    velx = Forces.playerXSpeed,
     inGround = false
   }
   Ground = {}
-  Obstacle = {
-    velx = -50,
-    vely = 0,
-  }
-
+  
   love.window.setMode(
     Game.width * Game.scale,
     Game.height * Game.scale
@@ -36,19 +92,17 @@ function love.load()
   Ground.body = love.physics.newBody(World, 0, Game.height, "static")
 	Ground.shape = love.physics.newRectangleShape(Game.width * Game.scale, 5)
 	Ground.fixture = love.physics.newFixture(Ground.body, Ground.shape)
-  Ground.fixture:setUserData("Ground")
+  Ground.fixture:setUserData(Tags.ground)
 
   Player.body = love.physics.newBody(World, 50, 5, "dynamic") -- player começa caindo
 	Player.shape = love.physics.newRectangleShape(Player.image:getWidth(), Player.image:getHeight())
   Player.fixture = love.physics.newFixture(Player.body, Player.shape)
-  Player.fixture:setUserData("Player")
-
-  Obstacle.body = love.physics.newBody(World, Game.width, Game.height, "dynamic")
-  Obstacle.shape = love.physics.newRectangleShape(0, 0, 10, 15) -- 10x15 tamanho do obstaculo
-  Obstacle.fixture = love.physics.newFixture(Obstacle.body, Obstacle.shape, 5)
-  Obstacle.fixture:setUserData("Obstacle")
+  Player.fixture:setUserData(Tags.player)
 
   love.graphics.setBackgroundColor(1, 1, 1)
+
+  -- Agenda o primeiro obstaculo para um valor entre os próximos Random.obstacleSpawnMin e Random.obstacleSpawnMax
+  ScheduleObstacule(love.math.random(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -56,13 +110,15 @@ function love.update(dt)
   World:update(dt)
   World:setCallbacks(BeginContact, EndContact, PreSolve, PostSolve)
 
+  -- Atualiza o clock de spawn dos obstaculos a cada frame
+  obstacleClock:update(Random.obstacleUpdateRate)
+
+  -- Remove os obstáculos que já sairam da tela
+  DespawnObstacles()
+  -- Incrementa a velocidade de aceleração de todos os obstáculos
   AccelerateObstacles()
 
   PlayerWalk()
-
-  if Obstacle.body:getX() < 0 then
-    Obstacle.body:setX(Game.width)
-  end
 
   if Player.body:getX() < 1 then -- limimar para o game over
     Game.over = true
@@ -77,38 +133,44 @@ function love.draw()
   love.graphics.draw(Game.background, 0, 0)
 
   if Game.over then
-    RGBColor(255, 0, 0)
+    RGBColor(Colors.Red)
     love.graphics.rectangle("fill", 0, 0, Game.width, Game.height)
     return
   end
 
   -- desenha o chão
-  RGBColor(208, 98, 36)
+  RGBColor(Colors.Orange)
   love.graphics.polygon("fill", Ground.body:getWorldPoints(Ground.shape:getPoints()))
 
   -- -- desenha o player na posição x e y
-  RGBColor(255, 255, 255)
+  RGBColor(Colors.White)
   love.graphics.draw(Player.image, Player.body:getX(), Player.body:getY(), 0,  1, 1, Player.image:getWidth()/2, Player.image:getHeight()/2)
 
-  RGBColor(0, 0, 0)
-  love.graphics.polygon("fill", Obstacle.body:getWorldPoints(Obstacle.shape:getPoints()))
+  -- Desenha todos os obstáculos que estão no array de obstáculos
+  DrawObstacles()
 end
 
 function love.keypressed(key)
   -- ESC para sair do jogo
-  if key == "escape" then
+  if key == Keys.escape then
     love.event.quit()
   end
 
   -- Debug CTRL Direito
-  if key == "rctrl" then
+  if key == Keys.controlRight then
     debug.debug()
   end
 
   -- Player
-  if key == "up" then
+  if key == Keys.arrowUp then
     if InGround() then
-      Player.body:applyLinearImpulse(0, -100)
+      Player.body:applyLinearImpulse(Forces.playerXJump, Forces.playerYJump * -1)
+    end
+  end
+
+  if key == Keys.arrowDown then
+    if InAir() then
+      Player.body:applyLinearImpulse(Forces.playerXDown, Forces.playerYDown)
     end
   end
 end
@@ -122,39 +184,86 @@ end
 
 -- Funções auxiliares
 function LoadPlayerAssets()
-  Player.image = love.graphics.newImage("assets/images/player.png")
+  Player.image = love.graphics.newImage(Assets.Player.main)
   Player.image:setFilter("nearest", "nearest")
   Player.width = Player.image:getWidth()
   Player.height = Player.image:getHeight()
 
-  Game.background = love.graphics.newImage("assets/images/bg-wall-1.jpg")
+  Game.background = love.graphics.newImage(Assets.Wall.past)
 end
 
-function RGBColor(r, g, b)
-  love.graphics.setColor(r/255, g/255, b/255)
+function RGBColor(color)
+  local rgb = Colors.rgb
+  love.graphics.setColor(color.r/rgb, color.g/rgb, color.b/rgb)
 end
 
 function GameOver()
   Game.over = true
 end
 
+function DrawObstacles()
+  for _, obstacle in ipairs(Obstacles) do
+      RGBColor(Colors.Black)
+      love.graphics.polygon("fill", obstacle.body:getWorldPoints(obstacle.shape:getPoints()))
+  end
+end
+
+function DespawnObstacles() 
+  for i, obstacle in ipairs(Obstacles) do
+    if obstacle.body:getX() < 0 then
+      PopObstacle(i)
+    end
+  end
+end
+
 function AccelerateObstacles() 
-  Obstacle.velx = Obstacle.velx - 0.02
-  Obstacle.body:setLinearVelocity(Obstacle.velx, Obstacle.vely)
+  Forces.obstacleXSpeed = Forces.obstacleXSpeed + Forces.obstacleXAccelerationRate
+
+  for _, obstacle in ipairs(Obstacles) do
+      obstacle.body:setLinearVelocity(Forces.obstacleXSpeed * -1, Forces.obstacleYSpeed * -1)
+  end
+end 
+
+-- Adiciona um obstáculo novo à lista e agenda o próximo
+function PushObstacleAndScheduleNext()
+  PushObstacle()
+  ScheduleObstacule(love.math.random(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
+end 
+
+function ScheduleObstacule(afterFrames) 
+  obstacleClock = cron.after(afterFrames, callback)
+end
+
+function PushObstacle() 
+  local obstacle = {}
+  obstacle.body = love.physics.newBody(World, Game.width, Game.height, "dynamic")
+  obstacle.shape = love.physics.newRectangleShape(0, 0, 10, 15) -- 10x15 tamanho do obstaculo
+  obstacle.fixture = love.physics.newFixture(obstacle.body, obstacle.shape, 5)
+  obstacle.fixture:setUserData(Tags.obstacle)
+
+  table.insert(Obstacles, obstacle)
+end 
+
+function PopObstacle(i)
+  table.remove(Obstacles, i)
 end 
 
 function InGround()
   return Player.inGround
 end
 
+function InAir()
+  return not Player.inGround
+end
+
 function BeginContact(a, b, coll)
-  if a:getUserData() == "Ground" and b:getUserData() == "Player" then
+  if a:getUserData() == Tags.ground and b:getUserData() == Tags.player then
     Player.inGround = true
   end
 end
 
 function EndContact(a, b, coll)
-  if a:getUserData() == "Ground" and b:getUserData() == "Player" then
+  if a:getUserData() == Tags.ground and b:getUserData() == Tags.player then
     Player.inGround = false
   end
 end
@@ -168,11 +277,11 @@ function PostSolve(a, b, coll, normalimpulse, tangentimpulse)
 end
 
 function PlayerWalk()
-  if love.keyboard.isDown("left") then
+  if love.keyboard.isDown(Keys.arrowLeft) then
     Player.body:setX(Player.body:getX() - Player.velx)
   end
 
-  if love.keyboard.isDown("right") then
+  if love.keyboard.isDown(Keys.arrowRight) then
     Player.body:setX(Player.body:getX() + Player.velx)
   end
 
