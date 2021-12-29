@@ -39,6 +39,16 @@ Forces = {
   powerUpBoostDecayRate = 0.1 -- will decay x per second
 }
 
+WorldForces = {
+  obstacleXSpeed = 50,
+  obstacleYSpeed = 0,
+  obstacleXAccelerationRate = 0.02,
+  garmentXSpeed = 50,
+  obstacleXSpeed = 50,
+  garmentXAccelerationRate = 0.02,
+  garmentYSpeed = 0
+}
+
 Dimensions = {
   meter = 18, -- the height of a meter our worlds will be 64px
   groundWidth = 13
@@ -183,6 +193,7 @@ local powerUpClock = cron.every(1, powerUpCallback) -- executes every second
 
 -- Roda quando o jogo abre (Inicialização deve acontecer aqui)
 function love.load()
+  ResetGameParams()
   love.physics.setMeter(Dimensions.meter)
 
   local font = love.graphics.newFont(Fonts.Minecraft, 18)
@@ -533,10 +544,10 @@ function DestroyObstacle(obstacle)
 end
 
 function AccelerateObstacles()
-  Forces.obstacleXSpeed = Forces.obstacleXSpeed + Forces.obstacleXAccelerationRate
+  WorldForces.obstacleXSpeed = WorldForces.obstacleXSpeed + WorldForces.obstacleXAccelerationRate
 
   for _, obstacle in ipairs(Obstacles) do
-      obstacle.body:setLinearVelocity(Forces.obstacleXSpeed * -1, Forces.obstacleYSpeed * -1)
+      obstacle.body:setLinearVelocity(WorldForces.obstacleXSpeed * -1, WorldForces.obstacleYSpeed * -1)
   end
 end
 
@@ -730,4 +741,18 @@ function DrawGameover()
 
   RGBColor(Colors.Black)
   love.graphics.print("Score: " .. Player.score, 130, Game.height/2)
+end
+
+function ResetGameParams()
+  Player.score = 0
+  Obstacles = {}
+  WorldForces = {
+    obstacleXSpeed = 50,
+    obstacleYSpeed = 0,
+    obstacleXAccelerationRate = 0.02,
+    garmentXSpeed = 50,
+    obstacleXSpeed = 50,
+    garmentXAccelerationRate = 0.02,
+    garmentYSpeed = 0
+  }
 end
