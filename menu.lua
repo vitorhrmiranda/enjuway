@@ -22,7 +22,7 @@ end
 function button_click(x, y)
     for i, v in ipairs(button) do
         if x > v.x and
-        x < v.x + font:getWidth(v.text) and
+        x < v.x + (font:getWidth(v.text) * 2) and
         y > v.y and
         y < v.y + font:getHeight() then
             if v.id == 'start' then
