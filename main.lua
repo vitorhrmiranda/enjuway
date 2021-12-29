@@ -11,7 +11,8 @@ Game = {
   over = false,
   background = nil,
   sounds = {},
-  state = 'menu'
+  state = 'menu',
+  scenery = 0 -- 0 - Passado | 1 - Presente | 2 - Futuro
 }
 
 Forces = {
@@ -112,11 +113,6 @@ Assets = {
     sparkles = "assets/images/spark.png"
   },
   GroundTiles = {
-    ScenarioTransition = {
-      [0] = "assets/images/ground_transition_one.png",
-      [1] = "assets/images/ground_transition_two.png",
-      [2] = "assets/images/ground_transition_three.png"
-    },
     ScenarioOne = {
       [0] = "assets/images/ground_one_one.png",
       [1] = "assets/images/ground_one_two.png",
@@ -180,6 +176,9 @@ local garmentClock = cron.every(1, garmentCallback) -- executes every second
 
 local powerUpCallback = function() TryPushPowerUp() end
 local powerUpClock = cron.every(1, powerUpCallback) -- executes every second
+
+local sceneryCallback = function() NextScenery() end
+local sceneryClock = cron.every(10, sceneryCallback) -- executes every second
 
 -- Roda quando o jogo abre (Inicialização deve acontecer aqui)
 function love.load()
@@ -388,6 +387,7 @@ function UpdateClocks(dt)
   obstacleClock:update(dt)
   garmentClock:update(dt)
   powerUpClock:update(dt)
+  sceneryClock:update(dt)
 end
 
 function LoadBackgroundAssets()
@@ -399,13 +399,29 @@ function LoadBackgroundAssets()
 end
 
 function LoadGroundAssets()
-  Game.scenary = {}
+  Game.scenarios = {}
 
-  Game.scenary[0] = {
+  Game.scenarios[0] = {
     ground = {
       [0] = LoadImage(Assets.GroundTiles.ScenarioOne[0]),
       [1] = LoadImage(Assets.GroundTiles.ScenarioOne[1]),
       [2] = LoadImage(Assets.GroundTiles.ScenarioOne[2]),
+    }
+  }
+
+  Game.scenarios[1] = {
+    ground = {
+      [0] = LoadImage(Assets.GroundTiles.ScenarioTwo[0]),
+      [1] = LoadImage(Assets.GroundTiles.ScenarioTwo[1]),
+      [2] = LoadImage(Assets.GroundTiles.ScenarioTwo[2]),
+    }
+  }
+
+  Game.scenarios[2] = {
+    ground = {
+      [0] = LoadImage(Assets.GroundTiles.ScenarioThree[0]),
+      [1] = LoadImage(Assets.GroundTiles.ScenarioThree[1]),
+      [2] = LoadImage(Assets.GroundTiles.ScenarioThree[2]),
     }
   }
 end
@@ -440,7 +456,7 @@ function DrawGroundTiles()
 end
 
 function SelectGround()
-  return Game.scenary[0].ground[love.math.random(0, #Assets.GroundTiles.ScenarioOne)]
+  return Game.scenarios[Game.scenery].ground[love.math.random(0, 2)]
 end
 
 function AddGroundTile(tile)
@@ -717,6 +733,14 @@ function love.mousepressed(x, y)
     button_click(x, y)
   end
 end
+
+function NextScenery() 
+  if Game.scenery == 2 then
+    Game.scenery = 0
+  else 
+    Game.scenery = Game.scenery + 1
+  end 
+end 
 
 function LoadImage(name)
   local img = love.graphics.newImage(name)
