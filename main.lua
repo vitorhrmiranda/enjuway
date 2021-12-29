@@ -153,7 +153,8 @@ Colors = {
   Black = { r = 0, g = 0, b = 0 },
   Orange = { r = 208, g = 98, b = 36 },
   Red = { r = 255, g = 0, b = 0 },
-  White = { r = 255, g = 255, b = 255 }
+  White = { r = 255, g = 255, b = 255 },
+  Gray = { r = 104, g = 109, b = 118}
 }
 
 Player = {
@@ -302,7 +303,7 @@ function love.draw()
     DrawBackgroundAssets()
 
     -- desenha o chão
-    RGBColor(Colors.Orange)
+    RGBColor(Colors.Gray)
     love.graphics.polygon("fill", Ground.body:getWorldPoints(Ground.shape:getPoints()))
 
     -- desenha o player na posição x e y
