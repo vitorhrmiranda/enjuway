@@ -232,6 +232,8 @@ function love.draw()
 
   -- Desenha as vestimentas
   Garment.draw()
+  
+  DrawPoints()
 end
 
 function love.keypressed(key)
@@ -287,8 +289,6 @@ function DrawPoints()
 
   RGBColor(Colors.Black)
   love.graphics.print(Player.score, 50, 28)
-
-  
 
   local magicNumber = math.random(0, 2000)
 
