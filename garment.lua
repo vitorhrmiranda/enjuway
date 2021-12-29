@@ -1,72 +1,115 @@
 local Garment = {}
 Garment.__index = Garment
 local ActiveGarment = {}
-local instanceClone
 
 function Garment:new()
   local instance = setmetatable({}, Garment)
 
-  instance.image = love.graphics.newImage(Assets.PowerUp.tshirt)
-  instance.image:setFilter("nearest", "nearest")
+  instance.image = LoadImage(Assets.Garment[love.math.random(0, #Assets.Garment)])
 
+  instance.id = love.math.random(Random.instanceIdMin, Random.instanceIdMax)
   instance.x = Game.width + instance.image:getWidth()
-  instance.y = Game.height/1.5 -- um quarto de tela
+  instance.y = Game.height/RandonHeight()
   instance.scaleX = 1
-  instance.toBeRemoved = false
 
   instance.physics = {}
   instance.physics.body = love.physics.newBody(World, instance.x, instance.y, "dynamic")
-  instance.physics.body:setLinearVelocity(-50, 0)
   instance.physics.shape = love.physics.newRectangleShape(instance.image:getWidth(), instance.image:getHeight())
   instance.physics.fixture = love.physics.newFixture(instance.physics.body, instance.physics.shape)
   instance.physics.fixture:setSensor(true)
-  instance.physics.fixture:setUserData(Tags.powerUp)
+  instance.physics.fixture:setUserData({ tag = Tags.garment, id = instance.id })
 
-  instanceClone = instance
   table.insert(ActiveGarment, instance)
 end
 
-function Garment:draw()
-  if instanceClone.toBeRemoved == false then
-    RGBColor(Colors.White)
-    love.graphics.draw( instanceClone.image, instanceClone.physics.body:getX(), instanceClone.physics.body:getY(), 0, 1, 1, instanceClone.image:getWidth()/2, instanceClone.image:getHeight()/2)
-  end
-end
-
-function Garment:checkRemove()
-  if instanceClone.toBeRemoved then
-    instanceClone:remove()
-  end
+function Garment:load()
+  ActiveGarment = {}
 end
 
 function Garment:update()
-  instanceClone.physics.body:setLinearVelocity(-50, 0)
-  instanceClone.checkRemove()
+  DespawnGarments()
+  AccelerateGarments()
+end
 
-  if #ActiveGarment < 1 then
-    Garment:new()
+function Garment:draw()
+  for _, instance in ipairs(ActiveGarment) do
+    RGBColor(Colors.White)
+    love.graphics.draw(instance.image, instance.physics.body:getX(), instance.physics.body:getY(), 0, 1, 1, instance.image:getWidth()/2, instance.image:getHeight()/2)
   end
 end
 
-function Garment:remove()
-  for i,instance in ipairs(ActiveGarment) do
-    if instance == self then
-      Player.score = Player.score + 1
-      table.remove(ActiveGarment, i)
+function DespawnGarments()
+  for i, instance in ipairs(ActiveGarment) do
+    if instance.physics.body:getX() < 0 then
+      DestroyGarment(instance)
+      PopGarment(GetGarmentTableIndex(instance))
     end
   end
+end
+
+function AccelerateGarments()
+  Forces.garmentXSpeed = Forces.garmentXSpeed + Forces.garmentXAccelerationRate
+  for _, instance in ipairs(ActiveGarment) do
+      instance.physics.body:setLinearVelocity(Forces.garmentXSpeed * -1, Forces.garmentYSpeed * -1)
+  end
+end
+
+function Garment:collect()
+  Player.score = Player.score + 1
+  Player.sounds.collect:play()
+
+  DestroyGarment(self)
+  PopGarment(GetGarmentTableIndex(self))
+end
+
+function GetGarmentTableIndex(element)
+  for index, value in ipairs(ActiveGarment) do
+    if value.id == element.id then
+      return index
+    end
+  end
+end
+
+function GetGarmentById(id)
+  for index, value in ipairs(ActiveGarment) do
+    if value.id == id then
+      return value
+    end
+  end
+end
+
+function DestroyGarment(instance)
+  instance.physics.body:destroy()
+end
+
+function PopGarment(i)
+  table.remove(ActiveGarment, i)
+end
+
+function Garment:destroy()
+  self.physics.body:destroy()
 end
 
 function Garment.beginContact(a, b, collision)
-  for i,instance in ipairs(ActiveGarment) do
-    if a == instance.physics.fixture or b == instance.physics.fixture then
-      if a == Player.fixture or b == Player.fixture then
-        Player.sounds.collect:play()
-        instance.toBeRemoved = true
-        return true
-      end
-    end
+  local instance = nil
+
+  if a:getUserData().tag == Tags.garment and b:getUserData().tag == Tags.player then
+    instance = a
+  elseif a:getUserData().tag == Tags.player and b:getUserData().tag == Tags.garment then 
+    instance = b
+  end   
+
+  if (instance ~= nil) then 
+    local garment = GetGarmentById(instance:getUserData().id)
+    garment:collect()
+
+    return true
   end
+end
+
+function RandonHeight()
+  local positions = {1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9}
+  return positions[math.random(7)]
 end
 
 return Garment
