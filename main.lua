@@ -166,7 +166,8 @@ function love.load()
   Garment.new()
   Game.ScoreAsset = love.graphics.newImage(Assets.Game.score)
 
-  button_spawn(5, 200, "Start", 'start')
+  button_spawn(765, 400, "Start", 'start')
+  button_spawn(770, 475, "Exit", 'exit')
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -505,7 +506,6 @@ end
 
 function love.mousepressed(x, y)
   if Game.state == "menu" then
-    print('aqui')
     button_click(x, y)
   end
 end
