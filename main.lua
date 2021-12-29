@@ -40,7 +40,7 @@ Tags = {
   ground = "Ground",
   player = "Player",
   obstacle = "Obstacle",
-  powerUp = "PowerUp",
+  garment = "Garment",
 }
 
 Keys = {
@@ -71,8 +71,11 @@ Assets = {
     [1] = "assets/images/percent_biggest.png",
     [2] = "assets/images/bundle.png"
   },
-  PowerUp = {
+  Garment = {
     tshirt = "assets/images/tshirt.png",
+  },
+  PowerUp = {
+    sparkles = "assets/images/spark.png"
   }
 }
 
@@ -232,7 +235,7 @@ function love.draw()
 
   -- Desenha as vestimentas
   Garment.draw()
-  
+
   DrawPoints()
 end
 
@@ -328,7 +331,7 @@ function DespawnObstacles()
   end
 end
 
-function DestroyObstacle(obstacle) 
+function DestroyObstacle(obstacle)
   obstacle.body:destroy()
 end
 
@@ -371,12 +374,12 @@ function PopObstacle(i)
   table.remove(Obstacles, i)
 end
 
-function TryPushPowerUp() 
+function TryPushPowerUp()
   local randomNumber = love.math.random(0, 100)
 
   if randomNumber <= Random.powerUpSpawnChance then
     Garment.new()
-  end 
+  end
 end
 
 function RandomFloat(lower, greater)
