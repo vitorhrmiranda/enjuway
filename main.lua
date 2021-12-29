@@ -58,6 +58,18 @@ Assets = {
   Game = {
     score = "assets/images/score.png",
   },
+  Background = {
+    [0] = "assets/images/bg-asset-1.png",
+    [1] = "assets/images/bg-asset-2.png",
+    [2] = "assets/images/bg-asset-3.png",
+    [3] = "assets/images/bg-asset-4.png",
+    [4] = "assets/images/bg-asset-5.png",
+    [5] = "assets/images/bg-asset-6.png",
+    [6] = "assets/images/bg-asset-7.png",
+    [7] = "assets/images/bg-asset-8.png",
+    [8] = "assets/images/bg-asset-9.png",
+    [9] = "assets/images/bg-asset-10.png",
+  },
   Player = {
     stopped = "assets/images/player.png",
     animation = "assets/images/player-animation.png",
@@ -204,12 +216,6 @@ function love.update(dt)
   Garment.update()
 end
 
--- Atualiza o clock de spawn dos obstaculos e powerUps a cada frame
-function UpdateClocks(dt)
-  obstacleClock:update(dt)
-  powerUpClock:update(dt)
-end
-
 -- Roda a cada frame (Realizar update de tela aqui)
 function love.draw()
   love.graphics.scale(Game.scale, Game.scale)
@@ -224,6 +230,8 @@ function love.draw()
     love.graphics.print("Game Over \nSe não enjoou\nAperte 'r' para recomeçar", 10, Game.height/2)
     return
   end
+
+  DrawBackgroundAssets()
 
   -- desenha o chão
   RGBColor(Colors.Orange)
@@ -288,6 +296,31 @@ function PlayTheme()
   Game.theme:setVolume(0.3)
   Game.theme:setLooping(true)
   Game.theme:play()
+end
+
+-- Atualiza o clock de spawn dos obstaculos e powerUps a cada frame
+function UpdateClocks(dt)
+  obstacleClock:update(dt)
+  powerUpClock:update(dt)
+end
+
+function DrawBackgroundAssets()
+  local image = LoadImage(Assets.Background[4])
+  RGBColor(Colors.White)
+  love.graphics.draw(image, 100, 0, 0, 1/Game.scale, 1/Game.scale)
+
+  image = LoadImage(Assets.Background[3])
+  RGBColor(Colors.White)
+  love.graphics.draw(image, 200, 0, 0, 1/Game.scale, 1/Game.scale)
+
+  image = LoadImage(Assets.Background[5])
+  RGBColor(Colors.White)
+  love.graphics.draw(image, 260, 50, 0, 1/Game.scale, 1/Game.scale)
+
+  image = LoadImage(Assets.Background[9])
+  love.graphics.setColor(1, 1, 1, 0.8)
+  love.graphics.draw(image, 150, 40, 0, 1/Game.scale, 1/Game.scale)
+
 end
 
 function DrawPoints()
