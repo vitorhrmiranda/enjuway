@@ -56,8 +56,10 @@ function AccelerateGarments()
 end
 
 function Garment:collect()
-  Player.score = Player.score + 1
-  Player.sounds.collect:play()
+  if Game.over == false then
+    Player.score = Player.score + 1
+    Player.sounds.collect:play()
+  end
 
   DestroyGarment(self)
   PopGarment(GetGarmentTableIndex(self))
