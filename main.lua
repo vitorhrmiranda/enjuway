@@ -46,7 +46,8 @@ Keys = {
   arrowLeft = "left",
   arrowDown = "down",
   arrowRight = "right",
-  restart = "r"
+  restart = "r",
+  m = "m",
 }
 
 Assets = {
@@ -232,6 +233,10 @@ function love.keypressed(key)
   if key == Keys.restart and Game.over then
     Game.over = false
     love.load()
+  end
+
+  if key == Keys.m then
+    love.audio.stop()
   end
 end
 
