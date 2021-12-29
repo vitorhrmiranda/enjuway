@@ -33,15 +33,13 @@ Dimensions = {
 Random = {
   obstacleSpawnMin = 0.5, -- every x seconds
   obstacleSpawnMax = 2, -- every x seconds
-  powerUpSpawnChance = 35, -- x% in 100
-  powerUpYPositionMin = 50,
-  powerUpYPositionMax = 100
 }
 
 Tags = {
   ground = "Ground",
   player = "Player",
-  obstacle = "Obstacle"
+  obstacle = "Obstacle",
+  powerUp = "PowerUp"
 }
 
 Keys = {
@@ -304,9 +302,14 @@ end
 function DespawnObstacles()
   for i, obstacle in ipairs(Obstacles) do
     if obstacle.body:getX() < 0 then
+      DestroyObstacle(obstacle)
       PopObstacle(i)
     end
   end
+end
+
+function DestroyObstacle(obstacle) 
+  obstacle.body:destroy()
 end
 
 function AccelerateObstacles()
