@@ -32,10 +32,10 @@ Forces = {
 WorldForces = {
   obstacleXSpeed = 50,
   obstacleYSpeed = 0,
-  obstacleXAccelerationRate = 0.02,
+  obstacleXAccelerationRate = 0.015,
   garmentXSpeed = 50,
   obstacleXSpeed = 50,
-  garmentXAccelerationRate = 0.02,
+  garmentXAccelerationRate = 0.015,
   garmentYSpeed = 0
 }
 
@@ -50,7 +50,7 @@ Random = {
   obstacleSpawnMin = 0.5, -- every x seconds
   obstacleSpawnMax = 2, -- every x seconds
   garmentSpawnChance = 40, -- x% in 100
-  powerUpSpawnChance = 5, -- x% in 100
+  powerUpSpawnChance = 8, -- x% in 100
 }
 
 Tags = {
@@ -765,15 +765,15 @@ function ResetGameParams()
   WorldForces = {
     obstacleXSpeed = 50,
     obstacleYSpeed = 0,
-    obstacleXAccelerationRate = 0.02,
+    obstacleXAccelerationRate = 0.015,
     garmentXSpeed = 50,
     obstacleXSpeed = 50,
-    garmentXAccelerationRate = 0.02,
+    garmentXAccelerationRate = 0.015,
     garmentYSpeed = 0,
     groundXSpeed = 50,
-    groundXAccelerationRate = 0.02,
+    groundXAccelerationRate = 0.015,
     powerUpXSpeed = 50,
     powerUpYSpeed = 0,
-    powerUpXAccelerationRate = 0.02,
+    powerUpXAccelerationRate = 0.015,
   }
 end

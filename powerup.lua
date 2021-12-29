@@ -54,7 +54,7 @@ function DespawnPowerUps()
   for i, instance in ipairs(ActivePowerUp) do
     if instance.physics.body:getX() < 0 then
       DestroyPowerUp(instance)
-      PopPowerUp(GetPowerUpTableIndex(ActivePowerUp, instance))
+      PopPowerUp(GetPowerUpTableIndex(instance))
     end
   end
 end
@@ -133,7 +133,6 @@ function PowerUp.beginContact(a, b, collision)
   if (instance ~= nil) then
     local powerUp = GetPowerUpById(instance:getUserData().id)
     powerUp:collect()
-
     return true
   end
 end
