@@ -112,16 +112,25 @@ Assets = {
     sparkles = "assets/images/spark.png"
   },
   GroundTiles = {
+    ScenarioTransition = {
+      [0] = "assets/images/ground_transition_one.png",
+      [1] = "assets/images/ground_transition_two.png",
+      [2] = "assets/images/ground_transition_three.png"
+    }
     ScenarioOne = {
       [0] = "assets/images/ground_one_one.png",
       [1] = "assets/images/ground_one_two.png",
       [2] = "assets/images/ground_one_three.png"
     },
     ScenarioTwo = {
-      [0] = "assets/images/percent.png"
+      [0] = "assets/images/ground_two_one.png",
+      [1] = "assets/images/ground_two_two.png",
+      [2] = "assets/images/ground_two_three.png"
     },
     ScenarioThree = {
-      [0] = "assets/images/percent.png"
+      [0] = "assets/images/ground_three_one.png",
+      [1] = "assets/images/ground_three_two.png",
+      [2] = "assets/images/ground_three_three.png"
     },
   },
 }
