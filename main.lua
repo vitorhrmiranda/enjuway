@@ -23,9 +23,6 @@ Forces = {
   playerXDown = 0,
   playerXSpeed = 1,
   groundYSpeed = 0,
-  powerUpXSpeed = 50,
-  powerUpYSpeed = 0,
-  powerUpXAccelerationRate = 0.02,
   powerUpXBoostSpeed = 0.5, -- extra speed
   powerUpXMaxBoost = 1, -- max boost
   powerUpBoostDecayRate = 0.1 -- will decay x per second
@@ -748,5 +745,8 @@ function ResetGameParams()
     garmentYSpeed = 0,
     groundXSpeed = 50,
     groundXAccelerationRate = 0.02,
+    powerUpXSpeed = 50,
+    powerUpYSpeed = 0,
+    powerUpXAccelerationRate = 0.02,
   }
 end
