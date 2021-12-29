@@ -23,6 +23,10 @@ function Garment:new()
   table.insert(ActiveGarment, instance)
 end
 
+function Garment:load() 
+  ActiveGarment = {}
+end
+
 function Garment:update()
   AccelerateGarments()
   DespawnGarments()
