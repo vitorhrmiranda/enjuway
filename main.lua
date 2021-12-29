@@ -22,15 +22,7 @@ Forces = {
   playerYDown = 100,
   playerXDown = 0,
   playerXSpeed = 1,
-  groundXSpeed = 50,
   groundYSpeed = 0,
-  groundXAccelerationRate = 0.02,
-  obstacleXSpeed = 50,
-  obstacleYSpeed = 0,
-  obstacleXAccelerationRate = 0.02,
-  garmentXSpeed = 50,
-  garmentYSpeed = 0,
-  garmentXAccelerationRate = 0.02,
   powerUpXSpeed = 50,
   powerUpYSpeed = 0,
   powerUpXAccelerationRate = 0.02,
@@ -472,10 +464,10 @@ function PopGroundTile(i)
 end
 
 function AccelerateGroundTiles(dt)
-  Forces.groundXSpeed = Forces.groundXSpeed + Forces.groundXAccelerationRate
+  WorldForces.groundXSpeed = WorldForces.groundXSpeed + WorldForces.groundXAccelerationRate
 
   for _, groundTile in ipairs(GroundTiles) do
-    groundTile.x = groundTile.x - (Forces.groundXSpeed * dt)
+    groundTile.x = groundTile.x - (WorldForces.groundXSpeed * dt)
   end
 end
 -- End GroundTiles
@@ -753,6 +745,8 @@ function ResetGameParams()
     garmentXSpeed = 50,
     obstacleXSpeed = 50,
     garmentXAccelerationRate = 0.02,
-    garmentYSpeed = 0
+    garmentYSpeed = 0,
+    groundXSpeed = 50,
+    groundXAccelerationRate = 0.02,
   }
 end
