@@ -185,6 +185,7 @@ function love.load()
   Game.ScoreAsset = LoadImage(Assets.Game.score)
 
   Garment:load()
+  LoadBackgroundAssets()
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -304,23 +305,26 @@ function UpdateClocks(dt)
   powerUpClock:update(dt)
 end
 
+function LoadBackgroundAssets()
+  Game.backgroundAssets = {}
+  Game.backgroundAssets[4] = LoadImage(Assets.Background[4])
+  Game.backgroundAssets[3] = LoadImage(Assets.Background[3])
+  Game.backgroundAssets[5] = LoadImage(Assets.Background[5])
+  Game.backgroundAssets[9] = LoadImage(Assets.Background[9])
+end
+
 function DrawBackgroundAssets()
-  local image = LoadImage(Assets.Background[4])
   RGBColor(Colors.White)
-  love.graphics.draw(image, 100, 0, 0, 1/Game.scale, 1/Game.scale)
+  love.graphics.draw(Game.backgroundAssets[4], 100, 0, 0, 1/Game.scale, 1/Game.scale)
 
-  image = LoadImage(Assets.Background[3])
   RGBColor(Colors.White)
-  love.graphics.draw(image, 200, 0, 0, 1/Game.scale, 1/Game.scale)
+  love.graphics.draw(Game.backgroundAssets[3], 200, 0, 0, 1/Game.scale, 1/Game.scale)
 
-  image = LoadImage(Assets.Background[5])
   RGBColor(Colors.White)
-  love.graphics.draw(image, 260, 50, 0, 1/Game.scale, 1/Game.scale)
+  love.graphics.draw(Game.backgroundAssets[5], 260, 50, 0, 1/Game.scale, 1/Game.scale)
 
-  image = LoadImage(Assets.Background[9])
   love.graphics.setColor(1, 1, 1, 0.8)
-  love.graphics.draw(image, 150, 40, 0, 1/Game.scale, 1/Game.scale)
-
+  love.graphics.draw(Game.backgroundAssets[9], 150, 40, 0, 1/Game.scale, 1/Game.scale)
 end
 
 function DrawPoints()
