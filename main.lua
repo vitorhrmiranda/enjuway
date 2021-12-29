@@ -1,6 +1,7 @@
 local Garment = require("garment")
 local PowerUp = require("powerup")
 local cron = require ("cron")
+require('menu')
 
 Game = {
   width = 320,
@@ -10,6 +11,7 @@ Game = {
   over = false,
   background = nil,
   sounds = {},
+  state = 'menu'
 }
 
 Forces = {
@@ -91,7 +93,8 @@ Assets = {
     jump = "assets/images/player-jump.png",
   },
   Wall = {
-    past = "assets/images/bg-wall-1.jpg"
+    past = "assets/images/bg-wall-1.jpg",
+    gameover = "assets/images/gameover.png"
   },
   Obstacle = {
     [0] = "assets/images/percent.png",
@@ -124,7 +127,7 @@ Assets = {
 
 Sounds = {
   Game = {
-    gameover = "assets/sounds/explosion.wav",
+    gameover = "assets/sounds/gameover.wav",
     theme = "assets/sounds/beach-theme.wav",
   },
   Player = {
@@ -227,80 +230,95 @@ function love.load()
   LoadBackgroundAssets()
 
   SpawnGroundTiles()
+
+  button_spawn(797, 300, "Start", 'start')
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
 function love.update(dt)
-  World:update(dt)
-  World:setCallbacks(BeginContact, EndContact, PreSolve, PostSolve)
+  if Game.state == 'playing' then
+    World:update(dt)
+    World:setCallbacks(BeginContact, EndContact, PreSolve, PostSolve)
+  
+    UpdateClocks(dt)
+  
+    -- Remove os obstáculos que já sairam da tela
+    DespawnObstacles()
+    -- Incrementa a velocidade de aceleração de todos os obstáculos
+    AccelerateObstacles()
 
-  UpdateClocks(dt)
-
-  -- Remove os obstáculos que já sairam da tela
-  DespawnObstacles()
-  -- Incrementa a velocidade de aceleração de todos os obstáculos
-  AccelerateObstacles()
-
-
-  -- Remove os objetos 'chao'
-  DespawnGroundTiles()
-  -- Incrementa a velocidade de aceleração de todos os objetos 'chao'
-  AccelerateGroundTiles(dt)
-
-  PlayerWalk()
-
-  if Player.body:getX() < 1 then -- limimar para o game over
-    Game.over = true
-    Game.theme:stop()
-    Game.sounds.gameover:play()
+    -- Remove os objetos 'chao'
+    DespawnGroundTiles()
+    -- Incrementa a velocidade de aceleração de todos os objetos 'chao'
+    AccelerateGroundTiles(dt)
+  
+    PlayerWalk()
+  
+    if Player.body:getX() < 1 then -- limimar para o game over
+      Game.over = true
+      Game.theme:stop()
+      Game.sounds.gameover:play()
+    end
+  
+    -- Calcular o novo estado do player
+    Player.animation.currentTime = Player.animation.currentTime + dt
+    if Player.animation.currentTime >= Player.animation.duration then
+      Player.animation.currentTime = Player.animation.currentTime - Player.animation.duration
+    end
+  
+    Garment:update()
+    PowerUp:update(dt)
   end
-
-  -- Calcular o novo estado do player
-  Player.animation.currentTime = Player.animation.currentTime + dt
-  if Player.animation.currentTime >= Player.animation.duration then
-    Player.animation.currentTime = Player.animation.currentTime - Player.animation.duration
-  end
-
-  Garment:update()
-  PowerUp:update(dt)
 end
 
 -- Roda a cada frame (Realizar update de tela aqui)
 function love.draw()
-  love.graphics.scale(Game.scale, Game.scale)
+  if Game.state == 'playing' then
+    love.graphics.scale(Game.scale, Game.scale)
 
-  love.graphics.setColor(1, 1, 1, 0.8)
-  love.graphics.draw(Game.background, 0, 0)
+    love.graphics.setColor(1, 1, 1, 0.8)
+    love.graphics.draw(Game.background, 0, 0)
 
-  if Game.over then
+    if Game.over then
+      RGBColor(Colors.White)
+      love.graphics.rectangle("fill", 0, 0, Game.width, Game.height)
+      RGBColor(Colors.Black)
+      love.graphics.print("Game Over \nSe não enjoou\nAperte 'r' para recomeçar", 10, Game.height/2)
+      return
+    end
+
+    -- desenha o chão
+    RGBColor(Colors.Orange)
+    love.graphics.polygon("fill", Ground.body:getWorldPoints(Ground.shape:getPoints()))
+
+    -- desenha o player na posição x e y
     RGBColor(Colors.White)
-    love.graphics.rectangle("fill", 0, 0, Game.width, Game.height)
-    RGBColor(Colors.Black)
-    love.graphics.print("Game Over \nSe não enjoou\nAperte 'r' para recomeçar", 10, Game.height/2)
-    return
+    Player:Draw()
+
+    -- Desenha todos os obstáculos que estão no array de obstáculos
+    DrawObstacles()
+
+    -- Desenha as vestimentas
+    Garment.draw()
+
+    DrawGroundTiles()
+
+    -- desenha o player na posição x e y
+    RGBColor(Colors.White)
+    Player:Draw()
+
+    -- Desenha todos os obstáculos que estão no array de obstáculos
+    DrawObstacles()
+
+    PowerUp.draw()
+
+    -- Desenha a pontuação
+    DrawPoints()
   end
 
-  DrawBackgroundAssets()
-
-  -- desenha o chão
-  RGBColor(Colors.Orange)
-  love.graphics.polygon("fill", Ground.body:getWorldPoints(Ground.shape:getPoints()))
-
-  DrawGroundTiles()
-
-  -- desenha o player na posição x e y
-  RGBColor(Colors.White)
-  Player:Draw()
-
-  -- Desenha todos os obstáculos que estão no array de obstáculos
-  DrawObstacles()
-
-  -- Desenha as vestimentas
-  Garment.draw()
-
-  PowerUp.draw()
-
-  DrawPoints()
+  if Game.state == 'menu' then
+    button_draw()
+  end
 end
 
 function love.keypressed(key)
@@ -456,6 +474,7 @@ function LoadPlayerAssets()
   Player:SetImage(Assets.Player.stopped)
 
   Game.background = LoadImage(Assets.Wall.past)
+  Game.backgroundGameover = LoadImage(Assets.Wall.gameover)
 end
 
 function RGBColor(color)
@@ -667,8 +686,22 @@ function Player:Draw()
   end
 end
 
+function love.mousepressed(x, y)
+  if Game.state == "menu" then
+    button_click(x, y)
+  end
+end
+
 function LoadImage(name)
   local img = love.graphics.newImage(name)
   img:setFilter("nearest", "nearest")
   return img
+end
+
+function DrawGameover()
+  RGBColor(Colors.White)
+  love.graphics.draw(Game.backgroundGameover, 0, 0, 0, 0.2, 0.23)
+
+  RGBColor(Colors.Black)
+  love.graphics.print("Score: " .. Player.score, 130, Game.height/2)
 end
