@@ -33,6 +33,7 @@ Dimensions = {
 Random = {
   obstacleSpawnMin = 0.5, -- every x seconds
   obstacleSpawnMax = 2, -- every x seconds
+  powerUpSpawnChance = 40, -- x% in 100
 }
 
 Tags = {
@@ -99,7 +100,6 @@ Player = {
 }
 
 Ground = {}
-
 Obstacles = {}
 
 local cron = require 'cron'
@@ -107,11 +107,12 @@ local cron = require 'cron'
 local obstacleCallback = function() PushObstacleAndScheduleNext() end
 local obstacleClock
 
+local powerUpCallback = function() TryPushPowerUp() end
+local powerUpClock = cron.every(1, powerUpCallback) -- executes every second
+
 -- Roda quando o jogo abre (Inicialização deve acontecer aqui)
 function love.load()
   love.physics.setMeter(Dimensions.meter)
-
-  Obstacles = {}
 
   -- create a world for the bodies to exist in with horizontal gravity of 0 and vertical gravity of 9.81
   World = love.physics.newWorld(Forces.hGravity, Forces.vGravity * Dimensions.meter, true)
@@ -150,8 +151,6 @@ function love.load()
 
   Game.sounds.gameover = love.audio.newSource(Sounds.Game.gameover, "static")
   Game.sounds.gameover:setVolume(0.5)
-
-  Garment.new()
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -186,6 +185,7 @@ end
 -- Atualiza o clock de spawn dos obstaculos e powerUps a cada frame
 function UpdateClocks(dt) 
   obstacleClock:update(dt)
+  powerUpClock:update(dt)
 end 
 
 -- Roda a cada frame (Realizar update de tela aqui)
@@ -214,8 +214,8 @@ function love.draw()
   -- Desenha todos os obstáculos que estão no array de obstáculos
   DrawObstacles()
 
-  -- Desenha a pontuação
-  DrawPoints()
+  -- Desenha as vestimentas
+  Garment.draw()
 end
 
 function love.keypressed(key)
@@ -268,7 +268,7 @@ end
 function DrawPoints()
   love.graphics.print("Score: " ..Player.score, 10, 4)
 
-  Garment.draw()
+  
 
   local magicNumber = math.random(0, 2000)
 
@@ -349,6 +349,14 @@ end
 
 function PopObstacle(i)
   table.remove(Obstacles, i)
+end
+
+function TryPushPowerUp() 
+  local randomNumber = love.math.random(0, 100)
+
+  if randomNumber <= Random.powerUpSpawnChance then
+    Garment.new()
+  end 
 end
 
 function RandomFloat(lower, greater)

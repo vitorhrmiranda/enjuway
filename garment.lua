@@ -1,7 +1,6 @@
 local Garment = {}
 Garment.__index = Garment
 local ActiveGarment = {}
-local instanceClone
 
 function Garment:new()
   local instance = setmetatable({}, Garment)
@@ -16,53 +15,75 @@ function Garment:new()
 
   instance.physics = {}
   instance.physics.body = love.physics.newBody(World, instance.x, instance.y, "dynamic")
-  instance.physics.body:setLinearVelocity(-50, 0)
   instance.physics.shape = love.physics.newRectangleShape(instance.image:getWidth(), instance.image:getHeight())
   instance.physics.fixture = love.physics.newFixture(instance.physics.body, instance.physics.shape)
   instance.physics.fixture:setSensor(true)
   instance.physics.fixture:setUserData(Tags.powerUp)
 
-  instanceClone = instance
   table.insert(ActiveGarment, instance)
 end
 
-function Garment:draw()
-  if instanceClone.toBeRemoved == false then
-    RGBColor(Colors.White)
-    love.graphics.draw( instanceClone.image, instanceClone.physics.body:getX(), instanceClone.physics.body:getY(), 0, 1, 1, instanceClone.image:getWidth()/2, instanceClone.image:getHeight()/2)
-  end
-end
-
-function Garment:checkRemove()
-  if instanceClone.toBeRemoved then
-    instanceClone:remove()
-  end
-end
-
 function Garment:update()
-  instanceClone.physics.body:setLinearVelocity(-50, 0)
-  instanceClone.checkRemove()
+  AccelerateGarments()
+  DespawnGarments()
+end
 
-  if #ActiveGarment < 1 then
-    Garment:new()
+function Garment:draw()
+  for _, instance in ipairs(ActiveGarment) do
+    RGBColor(Colors.White)
+    love.graphics.draw(instance.image, instance.physics.body:getX(), instance.physics.body:getY(), 0, 1, 1, instance.image:getWidth()/2, instance.image:getHeight()/2)
   end
 end
 
-function Garment:remove()
-  for i,instance in ipairs(ActiveGarment) do
-    if instance == self then
-      Player.score = Player.score + 1
-      table.remove(ActiveGarment, i)
+function DespawnGarments()
+  for i, instance in ipairs(ActiveGarment) do
+    if instance.physics.body:getX() < 0 then
+      DestroyGarment(instance)
+      PopGarment(GetIndex(ActiveGarment, instance))
     end
   end
 end
+
+function AccelerateGarments()
+  Forces.powerUpXSpeed = Forces.powerUpXSpeed + Forces.powerUpXAccelerationRate
+  for _, instance in ipairs(ActiveGarment) do
+      instance.physics.body:setLinearVelocity(Forces.powerUpXSpeed * -1, Forces.powerUpYSpeed * -1)
+  end
+end
+
+function Collect(instance)
+  Player.score = Player.score + 1
+  Player.sounds.collect:play()
+
+  DestroyGarment(instance)
+  PopGarment(GetIndex(ActiveGarment, instance))
+end
+
+function GetIndex(table, element)
+  for index, value in pairs(table) do
+    if value.id == element.id then
+      return index
+    end
+  end
+end
+
+function DestroyGarment(instance) 
+  instance.physics.body:destroy()
+end
+
+function PopGarment(i)
+  table.remove(ActiveGarment, i)
+end
+
+function Garment:destroy() 
+  self.physics.body:destroy()
+end 
 
 function Garment.beginContact(a, b, collision)
   for i,instance in ipairs(ActiveGarment) do
     if a == instance.physics.fixture or b == instance.physics.fixture then
       if a == Player.fixture or b == Player.fixture then
-        Player.sounds.collect:play()
-        instance.toBeRemoved = true
+        Collect(instance)
         return true
       end
     end
