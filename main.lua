@@ -57,6 +57,9 @@ Keys = {
 }
 
 Assets = {
+  Game = {
+    score = "assets/images/score.png",
+  },
   Player = {
     stopped = "assets/images/player.png",
     animation = "assets/images/player-animation.png",
@@ -86,6 +89,10 @@ Sounds = {
   }
 }
 
+Fonts = {
+  Minecraft = "assets/fonts/Minecraft.ttf",
+}
+
 Colors = {
   rgb = 255,
   Black = { r = 0, g = 0, b = 0 },
@@ -113,6 +120,9 @@ local obstacleClock
 -- Roda quando o jogo abre (Inicialização deve acontecer aqui)
 function love.load()
   love.physics.setMeter(Dimensions.meter)
+
+  local font = love.graphics.newFont(Fonts.Minecraft, 18)
+  love.graphics.setFont(font)
 
   Obstacles = {}
 
@@ -155,6 +165,7 @@ function love.load()
   Game.sounds.gameover:setVolume(0.5)
 
   Garment.new()
+  Game.ScoreAsset = love.graphics.newImage(Assets.Game.score)
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -187,9 +198,9 @@ function love.update(dt)
 end
 
 -- Atualiza o clock de spawn dos obstaculos e powerUps a cada frame
-function UpdateClocks(dt) 
+function UpdateClocks(dt)
   obstacleClock:update(dt)
-end 
+end
 
 -- Roda a cada frame (Realizar update de tela aqui)
 function love.draw()
@@ -265,11 +276,15 @@ end
 function PlayTheme()
   Game.theme = love.audio.newSource(Sounds.Game.theme, "static")
   Game.theme:setVolume(0.3)
+  Game.theme:setLooping(true)
   Game.theme:play()
 end
 
 function DrawPoints()
-  love.graphics.print("Score: " ..Player.score, 10, 4)
+  love.graphics.draw(Game.ScoreAsset, 10, 0)
+
+  RGBColor(Colors.Black)
+  love.graphics.print(Player.score, 50, 28)
 
   Garment.draw()
 
