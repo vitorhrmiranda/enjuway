@@ -5,8 +5,7 @@ local ActiveGarment = {}
 function Garment:new()
   local instance = setmetatable({}, Garment)
 
-  instance.image = love.graphics.newImage(Assets.Garment.tshirt)
-  instance.image:setFilter("nearest", "nearest")
+  instance.image = LoadImage(Assets.Garment[love.math.random(0, #Assets.Garment)])
 
   instance.id = love.math.random(0, 1000000)
   instance.x = Game.width + instance.image:getWidth()

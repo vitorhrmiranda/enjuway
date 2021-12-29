@@ -72,7 +72,10 @@ Assets = {
     [2] = "assets/images/bundle.png"
   },
   Garment = {
-    tshirt = "assets/images/tshirt.png",
+    [0] = "assets/images/tshirt.png",
+    [1] = "assets/images/boots-gray.png",
+    [2] = "assets/images/boots-brown.png",
+    [3] = "assets/images/skirt.png",
   },
   PowerUp = {
     sparkles = "assets/images/spark.png"
@@ -152,7 +155,7 @@ function love.load()
   Player.fixture = love.physics.newFixture(Player.body, Player.shape)
   Player.fixture:setUserData(Tags.player)
 
-  Player.animation = NewAnimation(love.graphics.newImage(Assets.Player.animation), 16, 16, 1)
+  Player.animation = NewAnimation(LoadImage(Assets.Player.animation), 16, 16, 1)
   Player.sounds.jump = love.audio.newSource(Sounds.Player.jump, "static")
   Player.sounds.jump:setVolume(0.05)
 
@@ -167,7 +170,7 @@ function love.load()
   Game.sounds.gameover = love.audio.newSource(Sounds.Game.gameover, "static")
   Game.sounds.gameover:setVolume(0.5)
 
-  Game.ScoreAsset = love.graphics.newImage(Assets.Game.score)
+  Game.ScoreAsset = LoadImage(Assets.Game.score)
 
   Garment:load()
 end
@@ -303,7 +306,7 @@ end
 function LoadPlayerAssets()
   Player:SetImage(Assets.Player.stopped)
 
-  Game.background = love.graphics.newImage(Assets.Wall.past)
+  Game.background = LoadImage(Assets.Wall.past)
 end
 
 function RGBColor(color)
@@ -355,8 +358,7 @@ end
 
 function PushObstacle()
   local obstacle = {}
-  obstacle.image = love.graphics.newImage(SelectObstacle())
-  obstacle.image:setFilter("nearest", "nearest")
+  obstacle.image = LoadImage(SelectObstacle())
 
   obstacle.body = love.physics.newBody(World, Game.width, Game.height, "dynamic")
   obstacle.shape = love.physics.newRectangleShape(obstacle.image:getWidth(), obstacle.image:getHeight())
@@ -449,8 +451,7 @@ function Player:Land()
 end
 
 function Player:SetImage(image)
-  Player.image = love.graphics.newImage(image)
-  Player.image:setFilter("nearest", "nearest")
+  Player.image = LoadImage(image)
 
   Player.width = Player.image:getWidth()
   Player.height = Player.image:getHeight()
@@ -501,4 +502,10 @@ function Player:Draw()
       Player.image:getHeight()/2
     )
   end
+end
+
+function LoadImage(name)
+  local img = love.graphics.newImage(name)
+  img:setFilter("nearest", "nearest")
+  return img
 end
