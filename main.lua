@@ -1,4 +1,5 @@
 local Garment = require("garment")
+require('menu')
 
 Game = {
   width = 320,
@@ -8,6 +9,7 @@ Game = {
   over = false,
   background = nil,
   sounds = {},
+  state = 'menu'
 }
 
 Forces = {
@@ -163,35 +165,43 @@ function love.load()
 
   Garment.new()
   Game.ScoreAsset = love.graphics.newImage(Assets.Game.score)
+
+  button_spawn(5, 200, "Start", 'start')
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
 function love.update(dt)
-  World:update(dt)
-  World:setCallbacks(BeginContact, EndContact, PreSolve, PostSolve)
-
-  UpdateClocks(dt)
-
-  -- Remove os obstáculos que já sairam da tela
-  DespawnObstacles()
-  -- Incrementa a velocidade de aceleração de todos os obstáculos
-  AccelerateObstacles()
-
-  PlayerWalk()
-
-  if Player.body:getX() < 1 then -- limimar para o game over
-    Game.over = true
-    Game.theme:stop()
-    Game.sounds.gameover:play()
+  if Game.state == 'playing' then
+    World:update(dt)
+    World:setCallbacks(BeginContact, EndContact, PreSolve, PostSolve)
+  
+    UpdateClocks(dt)
+  
+    -- Remove os obstáculos que já sairam da tela
+    DespawnObstacles()
+    -- Incrementa a velocidade de aceleração de todos os obstáculos
+    AccelerateObstacles()
+  
+    PlayerWalk()
+  
+    if Player.body:getX() < 1 then -- limimar para o game over
+      Game.over = true
+      Game.theme:stop()
+      Game.sounds.gameover:play()
+    end
+  
+    -- Calcular o novo estado do player
+    Player.animation.currentTime = Player.animation.currentTime + dt
+    if Player.animation.currentTime >= Player.animation.duration then
+      Player.animation.currentTime = Player.animation.currentTime - Player.animation.duration
+    end
+  
+    Garment.update()
   end
 
-  -- Calcular o novo estado do player
-  Player.animation.currentTime = Player.animation.currentTime + dt
-  if Player.animation.currentTime >= Player.animation.duration then
-    Player.animation.currentTime = Player.animation.currentTime - Player.animation.duration
-  end
-
-  Garment.update()
+  if Game.state == 'menu' then
+    
+  end 
 end
 
 -- Atualiza o clock de spawn dos obstaculos e powerUps a cada frame
@@ -201,32 +211,38 @@ end
 
 -- Roda a cada frame (Realizar update de tela aqui)
 function love.draw()
-  love.graphics.scale(Game.scale, Game.scale)
+  if Game.state == 'playing' then
+    love.graphics.scale(Game.scale, Game.scale)
 
-  love.graphics.setColor(1, 1, 1, 0.8)
-  love.graphics.draw(Game.background, 0, 0)
+    love.graphics.setColor(1, 1, 1, 0.8)
+    love.graphics.draw(Game.background, 0, 0)
 
-  if Game.over then
+    if Game.over then
+      RGBColor(Colors.White)
+      love.graphics.rectangle("fill", 0, 0, Game.width, Game.height)
+      RGBColor(Colors.Black)
+      love.graphics.print("Game Over \nSe não enjoou\nAperte 'r' para recomeçar", 10, Game.height/2)
+      return
+    end
+
+    -- desenha o chão
+    RGBColor(Colors.Orange)
+    love.graphics.polygon("fill", Ground.body:getWorldPoints(Ground.shape:getPoints()))
+
+    -- desenha o player na posição x e y
     RGBColor(Colors.White)
-    love.graphics.rectangle("fill", 0, 0, Game.width, Game.height)
-    RGBColor(Colors.Black)
-    love.graphics.print("Game Over \nSe não enjoou\nAperte 'r' para recomeçar", 10, Game.height/2)
-    return
+    Player:Draw()
+
+    -- Desenha todos os obstáculos que estão no array de obstáculos
+    DrawObstacles()
+
+    -- Desenha a pontuação
+    DrawPoints()
   end
 
-  -- desenha o chão
-  RGBColor(Colors.Orange)
-  love.graphics.polygon("fill", Ground.body:getWorldPoints(Ground.shape:getPoints()))
-
-  -- desenha o player na posição x e y
-  RGBColor(Colors.White)
-  Player:Draw()
-
-  -- Desenha todos os obstáculos que estão no array de obstáculos
-  DrawObstacles()
-
-  -- Desenha a pontuação
-  DrawPoints()
+  if Game.state == 'menu' then
+    button_draw()
+  end
 end
 
 function love.keypressed(key)
@@ -484,5 +500,12 @@ function Player:Draw()
       Player.image:getWidth()/2,
       Player.image:getHeight()/2
     )
+  end
+end
+
+function love.mousepressed(x, y)
+  if Game.state == "menu" then
+    print('aqui')
+    button_click(x, y)
   end
 end
