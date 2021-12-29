@@ -6,7 +6,7 @@ local instanceClone
 function Garment:new()
   local instance = setmetatable({}, Garment)
 
-  instance.image = love.graphics.newImage(Assets.Points.tshirt)
+  instance.image = love.graphics.newImage(Assets.PowerUp.tshirt)
   instance.image:setFilter("nearest", "nearest")
 
   instance.x = Game.width + instance.image:getWidth()
@@ -20,6 +20,7 @@ function Garment:new()
   instance.physics.shape = love.physics.newRectangleShape(instance.image:getWidth(), instance.image:getHeight())
   instance.physics.fixture = love.physics.newFixture(instance.physics.body, instance.physics.shape)
   instance.physics.fixture:setSensor(true)
+  instance.physics.fixture:setUserData(Tags.powerUp)
 
   instanceClone = instance
   table.insert(ActiveGarment, instance)
