@@ -498,7 +498,7 @@ function DrawPoints()
   love.graphics.draw(Game.ScoreAsset, 10, 0)
 
   RGBColor(Colors.Black)
-  love.graphics.print(Player.score, 50, 28)
+  love.graphics.print(Player.score, 50, 26)
 
   local magicNumber = math.random(0, 2000)
 
