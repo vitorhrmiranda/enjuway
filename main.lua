@@ -33,6 +33,7 @@ Dimensions = {
 Random = {
   obstacleSpawnMin = 0.5, -- every x seconds
   obstacleSpawnMax = 2, -- every x seconds
+  powerUpSpawnChance = 40, -- x% in 100
 }
 
 Tags = {
@@ -106,13 +107,15 @@ Player = {
 }
 
 Ground = {}
-
 Obstacles = {}
 
 local cron = require 'cron'
 
 local obstacleCallback = function() PushObstacleAndScheduleNext() end
 local obstacleClock
+
+local powerUpCallback = function() TryPushPowerUp() end
+local powerUpClock = cron.every(1, powerUpCallback) -- executes every second
 
 -- Roda quando o jogo abre (Inicialização deve acontecer aqui)
 function love.load()
@@ -161,8 +164,9 @@ function love.load()
   Game.sounds.gameover = love.audio.newSource(Sounds.Game.gameover, "static")
   Game.sounds.gameover:setVolume(0.5)
 
-  Garment.new()
   Game.ScoreAsset = love.graphics.newImage(Assets.Game.score)
+
+  Garment:load()
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -197,6 +201,7 @@ end
 -- Atualiza o clock de spawn dos obstaculos e powerUps a cada frame
 function UpdateClocks(dt)
   obstacleClock:update(dt)
+  powerUpClock:update(dt)
 end
 
 -- Roda a cada frame (Realizar update de tela aqui)
@@ -225,7 +230,9 @@ function love.draw()
   -- Desenha todos os obstáculos que estão no array de obstáculos
   DrawObstacles()
 
-  -- Desenha a pontuação
+  -- Desenha as vestimentas
+  Garment.draw()
+  
   DrawPoints()
 end
 
@@ -282,8 +289,6 @@ function DrawPoints()
 
   RGBColor(Colors.Black)
   love.graphics.print(Player.score, 50, 28)
-
-  Garment.draw()
 
   local magicNumber = math.random(0, 2000)
 
@@ -364,6 +369,14 @@ end
 
 function PopObstacle(i)
   table.remove(Obstacles, i)
+end
+
+function TryPushPowerUp() 
+  local randomNumber = love.math.random(0, 100)
+
+  if randomNumber <= Random.powerUpSpawnChance then
+    Garment.new()
+  end 
 end
 
 function RandomFloat(lower, greater)
