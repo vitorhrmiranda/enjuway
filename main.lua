@@ -17,7 +17,10 @@ Forces = {
   playerXSpeed = 1,
   obstacleXSpeed = 50,
   obstacleYSpeed = 0,
-  obstacleXAccelerationRate = 0.02
+  obstacleXAccelerationRate = 0.02,
+  powerUpXSpeed = 50,
+  powerUpYSpeed = 0,
+  powerUpXAccelerationRate = 0.02
 }
 
 Dimensions = {
@@ -25,15 +28,18 @@ Dimensions = {
 }
 
 Random = {
-  obstacleSpawnMin = 30, 
-  obstacleSpawnMax = 120,
-  obstacleUpdateRate = 1
+  obstacleSpawnMin = 0.5, -- every x seconds
+  obstacleSpawnMax = 2, -- every x seconds
+  powerUpSpawnChance = 35, -- x% in 100
+  powerUpYPositionMin = 50,
+  powerUpYPositionMax = 100,
 }
 
 Tags = {
   ground = "Ground",
   player = "Player",
-  obstacle = "Obstacle"
+  obstacle = "Obstacle",
+  powerUp = "PowerUp"
 }
 
 Keys = {
@@ -62,11 +68,16 @@ Colors = {
   White = { r = 255, g = 255, b = 255 }
 }
 
+local PowerUps = {}
 local Obstacles = {}
 
 local cron = require 'cron'
-local callback = function() PushObstacleAndScheduleNext() end
+
+local obstacleCallback = function() PushObstacleAndScheduleNext() end
 local obstacleClock
+
+local powerUpCallback = function() TryPushPowerUp() end
+local powerUpClock = cron.every(1, powerUpCallback) -- executes every second
 
 -- Roda quando o jogo abre (Inicialização deve acontecer aqui)
 function love.load()
@@ -102,7 +113,7 @@ function love.load()
   love.graphics.setBackgroundColor(1, 1, 1)
 
   -- Agenda o primeiro obstaculo para um valor entre os próximos Random.obstacleSpawnMin e Random.obstacleSpawnMax
-  ScheduleObstacule(love.math.random(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
+  ScheduleObstacule(RandomFloat(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -110,8 +121,10 @@ function love.update(dt)
   World:update(dt)
   World:setCallbacks(BeginContact, EndContact, PreSolve, PostSolve)
 
-  -- Atualiza o clock de spawn dos obstaculos a cada frame
-  obstacleClock:update(Random.obstacleUpdateRate)
+  UpdateClocks(dt)
+
+  DespawnPowerUps()
+  AcceleratePowerUps()
 
   -- Remove os obstáculos que já sairam da tela
   DespawnObstacles()
@@ -124,6 +137,12 @@ function love.update(dt)
     Game.over = true
   end
 end
+
+-- Atualiza o clock de spawn dos obstaculos e powerUps a cada frame
+function UpdateClocks(dt) 
+  obstacleClock:update(dt)
+  powerUpClock:update(dt)
+end 
 
 -- Roda a cada frame (Realizar update de tela aqui)
 function love.draw()
@@ -142,12 +161,14 @@ function love.draw()
   RGBColor(Colors.Orange)
   love.graphics.polygon("fill", Ground.body:getWorldPoints(Ground.shape:getPoints()))
 
-  -- -- desenha o player na posição x e y
+  -- desenha o player na posição x e y
   RGBColor(Colors.White)
   love.graphics.draw(Player.image, Player.body:getX(), Player.body:getY(), 0,  1, 1, Player.image:getWidth()/2, Player.image:getHeight()/2)
 
   -- Desenha todos os obstáculos que estão no array de obstáculos
   DrawObstacles()
+  -- Desenha todos os power ups que estão no array de obstáculos
+  DrawPowerUps()
 end
 
 function love.keypressed(key)
@@ -161,13 +182,14 @@ function love.keypressed(key)
     debug.debug()
   end
 
-  -- Player
+  -- Player jump
   if key == Keys.arrowUp then
     if InGround() then
       Player.body:applyLinearImpulse(Forces.playerXJump, Forces.playerYJump * -1)
     end
   end
 
+  -- Player down
   if key == Keys.arrowDown then
     if InAir() then
       Player.body:applyLinearImpulse(Forces.playerXDown, Forces.playerYDown)
@@ -201,6 +223,7 @@ function GameOver()
   Game.over = true
 end
 
+-- Start Obstacle
 function DrawObstacles()
   for _, obstacle in ipairs(Obstacles) do
       RGBColor(Colors.Black)
@@ -227,11 +250,11 @@ end
 -- Adiciona um obstáculo novo à lista e agenda o próximo
 function PushObstacleAndScheduleNext()
   PushObstacle()
-  ScheduleObstacule(love.math.random(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
+  ScheduleObstacule(RandomFloat(Random.obstacleSpawnMin, Random.obstacleSpawnMax))
 end 
 
 function ScheduleObstacule(afterFrames) 
-  obstacleClock = cron.after(afterFrames, callback)
+  obstacleClock = cron.after(afterFrames, obstacleCallback)
 end
 
 function PushObstacle() 
@@ -247,6 +270,76 @@ end
 function PopObstacle(i)
   table.remove(Obstacles, i)
 end 
+-- End Obstacle
+
+-- Start PowerUp
+function PushPowerUp() 
+  local yPosition = RandomFloat(Random.powerUpYPositionMin, Random.powerUpYPositionMax)
+
+  local powerUp = {}
+  powerUp.id = love.math.random(0, 100000000)
+  powerUp.body = love.physics.newBody(World, Game.width, Game.height, "dynamic")
+  powerUp.shape = love.physics.newRectangleShape(0, yPosition * -1, 10, 15) -- 10x15 tamanho do obstaculo
+  powerUp.fixture = love.physics.newFixture(powerUp.body, powerUp.shape, 5)
+  powerUp.fixture:setUserData(Tags.powerUp)
+
+  table.insert(PowerUps, powerUp)
+end 
+
+function PopPowerUp(i)
+  table.remove(PowerUps, i)
+end 
+
+function TryPushPowerUp() 
+  local randomNumber = love.math.random(0, 100)
+
+  if randomNumber <= Random.powerUpSpawnChance then
+    PushPowerUp()
+  end 
+end
+
+function DrawPowerUps()
+  for _, powerUp in ipairs(PowerUps) do
+      RGBColor(Colors.White)
+      love.graphics.polygon("fill", powerUp.body:getWorldPoints(powerUp.shape:getPoints()))
+  end
+end
+
+function DespawnPowerUps() 
+  for i, powerUp in ipairs(PowerUps) do
+    if powerUp.body:getX() < 0 then
+      PopPowerUp(i)
+    end
+  end
+end
+
+function AcceleratePowerUps() 
+  Forces.powerUpXSpeed = Forces.powerUpXSpeed + Forces.powerUpXAccelerationRate
+
+  for _, powerUp in ipairs(PowerUps) do
+    powerUp.body:setLinearVelocity(Forces.powerUpXSpeed * -1, 0)
+  end
+end 
+
+function ApplyPowerUp(powerUp) 
+  local powerUpIndex = PowerUpFind(PowerUps, powerUp)
+  -- Apply powerUp to player then pop it from list
+  print(powerUpIndex)
+  PopPowerUp(powerUpIndex)
+end 
+
+function PowerUpFind(table, element)
+  for index, value in pairs(table) do
+    if value.id == element.id then
+      return index
+    end
+  end
+end
+-- End PowerUp
+
+function RandomFloat(lower, greater)
+  return lower + math.random() * (greater - lower);
+end
 
 function InGround()
   return Player.inGround
@@ -257,9 +350,12 @@ function InAir()
 end
 
 function BeginContact(a, b, coll)
-  if a:getUserData() == Tags.ground and b:getUserData() == Tags.player then
+  print(a:getUserData() .. " - " .. b:getUserData())
+  if (b:getUserData() == Tags.player and a:getUserData() == Tags.ground) then
     Player.inGround = true
-  end
+  elseif a:getUserData() == Tags.player and b:getUserData() == Tags.powerUp then 
+    ApplyPowerUp(b)
+  end  
 end
 
 function EndContact(a, b, coll)
