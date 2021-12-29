@@ -50,7 +50,7 @@ Random = {
   obstacleSpawnMin = 0.5, -- every x seconds
   obstacleSpawnMax = 2, -- every x seconds
   garmentSpawnChance = 40, -- x% in 100
-  powerUpSpawnChance = 8, -- x% in 100
+  powerUpSpawnChance = 10, -- x% in 100
 }
 
 Tags = {
