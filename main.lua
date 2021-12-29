@@ -60,7 +60,8 @@ Assets = {
   },
   Obstacle = {
     [0] = "assets/images/percent.png",
-    [1] = "assets/images/percent_biggest.png"
+    [1] = "assets/images/percent_biggest.png",
+    [2] = "assets/images/bundle.png"
   },
   Points = {
     tshirt = "assets/images/tshirt.png",
@@ -322,7 +323,7 @@ function PushObstacle()
 end
 
 function SelectObstacle()
-  return Assets.Obstacle[love.math.random(0, 1)]
+  return Assets.Obstacle[love.math.random(0, #Assets.Obstacle)]
 end
 
 function PopObstacle(i)
