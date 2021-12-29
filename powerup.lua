@@ -33,13 +33,13 @@ function PowerUp:load()
 end
 
 function PowerUp:update(dt)
-  UpdateClocks(dt)
+  UpdatePowerUpClocks(dt)
 
   DespawnPowerUps()
   AcceleratePowerUps()
 end
 
-function UpdateClocks(dt) 
+function UpdatePowerUpClocks(dt) 
   boostClock:update(dt)
 end
 
@@ -67,20 +67,28 @@ function AcceleratePowerUps()
 end
 
 function PowerUp:collect()
-  AddBoost(Forces.powerUpXBoost, Forces.powerUpYBoost * -1)
+  AddBoost(Forces.powerUpXBoost)
 
   DestroyPowerUp(self)
   PopPowerUp(GetPowerUpTableIndex(self))
 end
 
-function AddBoost(xForce, yForce) 
-  Player.velx = 2
+function AddBoost(xForce) 
+  if Player.velx < Forces.playerXSpeed then 
+    Player.velx = Forces.playerXSpeed
+  end   
+
+  local newBoost = Player.currentXBoost + Forces.powerUpXBoostSpeed 
+  if (newBoost >= Forces.powerUpXMaxBoost) then 
+    newBoost = Forces.powerUpXMaxBoost
+  end  
+
+  Player.currentXBoost = newBoost
 end
 
 function DecayBoost() 
-  print(Player.velx)
-  if Player.velx > Forces.powerUpXBoostSpeed then
-    Player.velx = Player.velx - Forces.powerUpBoostDecayRate 
+  if Player.currentXBoost > 0 then
+    Player.currentXBoost = Player.currentXBoost - Forces.powerUpBoostDecayRate 
   end
 end
 

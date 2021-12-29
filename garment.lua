@@ -49,9 +49,9 @@ function DespawnGarments()
 end
 
 function AccelerateGarments()
-  Forces.powerUpXSpeed = Forces.powerUpXSpeed + Forces.powerUpXAccelerationRate
+  Forces.garmentXSpeed = Forces.garmentXSpeed + Forces.garmentXAccelerationRate
   for _, instance in ipairs(ActiveGarment) do
-      instance.physics.body:setLinearVelocity(Forces.powerUpXSpeed * -1, Forces.powerUpYSpeed * -1)
+      instance.physics.body:setLinearVelocity(Forces.garmentXSpeed * -1, Forces.garmentYSpeed * -1)
   end
 end
 

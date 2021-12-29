@@ -29,8 +29,8 @@ Forces = {
   powerUpXSpeed = 50,
   powerUpYSpeed = 0,
   powerUpXAccelerationRate = 0.02,
-  powerUpXBoostSpeed = 2,
-  powerUpYBoost = 0,
+  powerUpXBoostSpeed = 0.5, -- extra speed
+  powerUpXMaxBoost = 1, -- max boost 
   powerUpBoostDecayRate = 0.1 -- will decay x per second
 }
 
@@ -115,6 +115,7 @@ Colors = {
 Player = {
   score = 0,
   velx = Forces.playerXSpeed,
+  currentXBoost = 0,
   inGround = false,
   animation = {},
   sounds = {},
@@ -435,13 +436,17 @@ function PostSolve(a, b, coll, normalimpulse, tangentimpulse)
 
 end
 
+function GetPlayerXSpeed() 
+  return Player.velx + Player.currentXBoost
+end
+
 function PlayerWalk()
   if love.keyboard.isDown(Keys.arrowLeft) then
-    Player.body:setX(Player.body:getX() - Player.velx)
+    Player.body:setX(Player.body:getX() - GetPlayerXSpeed())
   end
 
   if love.keyboard.isDown(Keys.arrowRight) then
-    Player.body:setX(Player.body:getX() + Player.velx)
+    Player.body:setX(Player.body:getX() + GetPlayerXSpeed())
   end
 
   if Player.body:getX() < 0 then
