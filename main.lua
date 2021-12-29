@@ -29,7 +29,7 @@ Forces = {
   powerUpXSpeed = 50,
   powerUpYSpeed = 0,
   powerUpXAccelerationRate = 0.02,
-  powerUpXBoost = 100,
+  powerUpXBoostSpeed = 2,
   powerUpYBoost = 0,
   powerUpBoostDecayRate = 0.1 -- will decay x per second
 }

@@ -79,7 +79,7 @@ end
 
 function DecayBoost() 
   print(Player.velx)
-  if Player.velx > 1 then
+  if Player.velx > Forces.powerUpXBoostSpeed then
     Player.velx = Player.velx - Forces.powerUpBoostDecayRate 
   end
 end
