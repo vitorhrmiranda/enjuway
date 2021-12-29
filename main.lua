@@ -20,6 +20,9 @@ Forces = {
   playerYDown = 100,
   playerXDown = 0,
   playerXSpeed = 1,
+  groundXSpeed = 50,
+  groundYSpeed = 0,
+  groundXAccelerationRate = 0.02,
   obstacleXSpeed = 50,
   obstacleYSpeed = 0,
   obstacleXAccelerationRate = 0.02,
@@ -35,7 +38,8 @@ Forces = {
 }
 
 Dimensions = {
-  meter = 18 -- the height of a meter our worlds will be 64px
+  meter = 18, -- the height of a meter our worlds will be 64px
+  groundWidth = 13
 }
 
 Random = {
@@ -102,7 +106,20 @@ Assets = {
   },
   PowerUp = {
     sparkles = "assets/images/spark.png"
-  }
+  },
+  GroundTiles = {
+    ScenarioOne = {
+      [0] = "assets/images/ground_one_one.png",
+      [1] = "assets/images/ground_one_two.png",
+      [2] = "assets/images/ground_one_three.png"
+    },
+    ScenarioTwo = {
+      [0] = "assets/images/percent.png"
+    },
+    ScenarioThree = {
+      [0] = "assets/images/percent.png"
+    },
+  },
 }
 
 Sounds = {
@@ -128,6 +145,7 @@ Colors = {
   Red = { r = 255, g = 0, b = 0 },
   White = { r = 255, g = 255, b = 255 }
 }
+
 Player = {
   score = 0,
   velx = Forces.playerXSpeed,
@@ -138,6 +156,7 @@ Player = {
 }
 
 Ground = {}
+GroundTiles = {}
 Obstacles = {}
 
 local obstacleCallback = function() PushObstacleAndScheduleNext() end
@@ -172,7 +191,7 @@ function love.load()
   PlayTheme()
 
   Ground.body = love.physics.newBody(World, 0, Game.height, "static")
-	Ground.shape = love.physics.newRectangleShape(Game.width * Game.scale, 5)
+	Ground.shape = love.physics.newRectangleShape(Game.width * Game.scale, 14)
 	Ground.fixture = love.physics.newFixture(Ground.body, Ground.shape)
   Ground.fixture:setUserData({ tag = Tags.ground })
 
@@ -206,6 +225,8 @@ function love.load()
   PowerUp:load()
 
   LoadBackgroundAssets()
+
+  SpawnGroundTiles()
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -219,6 +240,12 @@ function love.update(dt)
   DespawnObstacles()
   -- Incrementa a velocidade de aceleração de todos os obstáculos
   AccelerateObstacles()
+
+
+  -- Remove os objetos 'chao'
+  DespawnGroundTiles()
+  -- Incrementa a velocidade de aceleração de todos os objetos 'chao'
+  AccelerateGroundTiles(dt)
 
   PlayerWalk()
 
@@ -258,6 +285,8 @@ function love.draw()
   -- desenha o chão
   RGBColor(Colors.Orange)
   love.graphics.polygon("fill", Ground.body:getWorldPoints(Ground.shape:getPoints()))
+
+  DrawGroundTiles()
 
   -- desenha o player na posição x e y
   RGBColor(Colors.White)
@@ -336,6 +365,65 @@ function LoadBackgroundAssets()
   Game.backgroundAssets[5] = LoadImage(Assets.Background[5])
   Game.backgroundAssets[9] = LoadImage(Assets.Background[9])
 end
+
+-- Ground tiles
+function SpawnGroundTiles()
+  local spawnQuantity = (Game.width / Dimensions.groundWidth) + 1
+  for i = 1,spawnQuantity,1
+  do 
+    SpawnNewRandomGroundTile(i)
+  end
+end
+
+function SpawnNewRandomGroundTile(i) 
+  table.insert(GroundTiles, GetRandomGroundTile(i))
+end
+
+function GetRandomGroundTile(i)
+  local groundTile = {}
+  groundTile.image = LoadImage(SelectGroundTile())
+  groundTile.x = Dimensions.groundWidth * (i - 1)
+  groundTile.y = Game.height - groundTile.image:getHeight() / Game.scale
+
+  return groundTile
+end 
+
+function DrawGroundTiles()
+  for i, groundTile in ipairs(GroundTiles) do
+    RGBColor(Colors.White)
+    love.graphics.draw(groundTile.image, groundTile.x, groundTile.y, 0, 1/Game.scale, 1/Game.scale)
+  end
+end 
+
+function SelectGroundTile()
+  return Assets.GroundTiles.ScenarioOne[love.math.random(0, #Assets.GroundTiles.ScenarioOne)]
+end
+
+function AddGroundTile(tile)
+  table.insert(GroundTiles, groundTile)
+end 
+
+function DespawnGroundTiles()
+  for i, groundTile in ipairs(GroundTiles) do
+    if groundTile.x < 0 then
+      PopGroundTile(i)
+      SpawnNewRandomGroundTile(i)
+    end
+  end
+end
+
+function PopGroundTile(i)
+  table.remove(GroundTiles, i)
+end
+
+function AccelerateGroundTiles(dt)
+  Forces.groundXSpeed = Forces.groundXSpeed + Forces.groundXAccelerationRate
+
+  for _, groundTile in ipairs(GroundTiles) do
+    groundTile.x = groundTile.x - (Forces.groundXSpeed * dt)
+  end
+end
+-- End GroundTiles
 
 function DrawBackgroundAssets()
   RGBColor(Colors.White)

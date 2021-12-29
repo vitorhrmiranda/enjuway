@@ -15,7 +15,7 @@ function PowerUp:new()
 
   instance.id = love.math.random(Random.instanceIdMin, Random.instanceIdMax)
   instance.x = Game.width + instance.image:getWidth()
-  instance.y = Game.height/1.5 -- um quarto de tela
+  instance.y = Game.height/RandonHeight()
   instance.scaleX = 1
 
   instance.physics = {}
