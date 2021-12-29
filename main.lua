@@ -87,7 +87,8 @@ Assets = {
     jump = "assets/images/player-jump.png",
   },
   Wall = {
-    past = "assets/images/bg-wall-1.jpg"
+    past = "assets/images/bg-wall-1.jpg",
+    gameover = "assets/images/gameover.png"
   },
   Obstacle = {
     [0] = "assets/images/percent.png",
@@ -107,7 +108,7 @@ Assets = {
 
 Sounds = {
   Game = {
-    gameover = "assets/sounds/explosion.wav",
+    gameover = "assets/sounds/gameover.wav",
     theme = "assets/sounds/beach-theme.wav",
   },
   Player = {
@@ -246,10 +247,7 @@ function love.draw()
   love.graphics.draw(Game.background, 0, 0)
 
   if Game.over then
-    RGBColor(Colors.White)
-    love.graphics.rectangle("fill", 0, 0, Game.width, Game.height)
-    RGBColor(Colors.Black)
-    love.graphics.print("Game Over \nSe não enjoou\nAperte 'r' para recomeçar", 10, Game.height/2)
+    DrawGameover()
     return
   end
 
@@ -368,6 +366,7 @@ function LoadPlayerAssets()
   Player:SetImage(Assets.Player.stopped)
 
   Game.background = LoadImage(Assets.Wall.past)
+  Game.backgroundGameover = LoadImage(Assets.Wall.gameover)
 end
 
 function RGBColor(color)
@@ -583,4 +582,12 @@ function LoadImage(name)
   local img = love.graphics.newImage(name)
   img:setFilter("nearest", "nearest")
   return img
+end
+
+function DrawGameover()
+  RGBColor(Colors.White)
+  love.graphics.draw(Game.backgroundGameover, 0, 0, 0, 0.2, 0.23)
+
+  RGBColor(Colors.Black)
+  love.graphics.print("Score: " .. Player.score, 130, Game.height/2)
 end
