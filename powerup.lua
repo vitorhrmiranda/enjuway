@@ -67,6 +67,7 @@ function AcceleratePowerUps()
 end
 
 function PowerUp:collect()
+  Player.sounds.powerUp:play()
   AddBoost(Forces.powerUpXBoost)
 
   DestroyPowerUp(self)
@@ -124,11 +125,11 @@ function PowerUp.beginContact(a, b, collision)
   local instance = nil
   if a:getUserData().tag == Tags.powerUp and b:getUserData().tag == Tags.player then
     instance = a
-  elseif a:getUserData().tag == Tags.player and b:getUserData().tag == Tags.powerUp then 
+  elseif a:getUserData().tag == Tags.player and b:getUserData().tag == Tags.powerUp then
     instance = b
-  end   
+  end
 
-  if (instance ~= nil) then 
+  if (instance ~= nil) then
     local powerUp = GetPowerUpById(instance:getUserData().id)
     powerUp:collect()
 
