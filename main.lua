@@ -1,3 +1,5 @@
+local Garment = require("garment")
+
 Game = {
   width = 320,
   height = 180,
@@ -58,6 +60,9 @@ Assets = {
   Obstacle = {
     [0] = "assets/images/percent.png",
     [1] = "assets/images/percent_biggest.png"
+  },
+  Points = {
+    tshirt = "assets/images/tshirt.png",
   }
 }
 
@@ -78,6 +83,7 @@ Colors = {
   White = { r = 255, g = 255, b = 255 }
 }
 Player = {
+  score = 0,
   velx = Forces.playerXSpeed,
   inGround = false,
   animation = {},
@@ -129,6 +135,8 @@ function love.load()
 
   Game.sounds.gameover = love.audio.newSource(Sounds.Game.gameover, "static")
   Game.sounds.gameover:setVolume(0.5)
+
+  Garment.new()
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -156,6 +164,8 @@ function love.update(dt)
   if Player.animation.currentTime >= Player.animation.duration then
     Player.animation.currentTime = Player.animation.currentTime - Player.animation.duration
   end
+
+  Garment.update()
 end
 
 -- Roda a cada frame (Realizar update de tela aqui)
@@ -181,6 +191,21 @@ function love.draw()
 
   -- Desenha todos os obstáculos que estão no array de obstáculos
   DrawObstacles()
+
+  -- Desenha a pontuação
+  DrawPoints()
+end
+
+function DrawPoints()
+  love.graphics.print("Score: " ..Player.score, 10, 4)
+
+  Garment.draw()
+
+  local magicNumber = math.random(0, 2000)
+
+  if magicNumber < 10 then
+
+  end
 end
 
 function love.keypressed(key)
@@ -285,6 +310,8 @@ function BeginContact(a, b, coll)
   if a:getUserData() == Tags.ground and b:getUserData() == Tags.player then
     Player.inGround = true
   end
+
+  if Garment.beginContact(a, b, coll) then return end
 end
 
 function EndContact(a, b, coll)
