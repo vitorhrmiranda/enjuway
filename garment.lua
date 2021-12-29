@@ -8,6 +8,7 @@ function Garment:new()
   instance.image = love.graphics.newImage(Assets.PowerUp.tshirt)
   instance.image:setFilter("nearest", "nearest")
 
+  instance.id = love.math.random(0, 1000000)
   instance.x = Game.width + instance.image:getWidth()
   instance.y = Game.height/1.5 -- um quarto de tela
   instance.scaleX = 1
@@ -28,8 +29,8 @@ function Garment:load()
 end
 
 function Garment:update()
-  AccelerateGarments()
   DespawnGarments()
+  AccelerateGarments()
 end
 
 function Garment:draw()
