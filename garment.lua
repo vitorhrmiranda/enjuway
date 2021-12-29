@@ -61,6 +61,11 @@ function Garment:collect()
     Player.sounds.collect:play()
   end
 
+  if Player.score % 2 == 0 then
+    Game.scenery = (Game.scenery + 1) % 3
+  end
+
+
   DestroyGarment(self)
   PopGarment(GetGarmentTableIndex(self))
 end

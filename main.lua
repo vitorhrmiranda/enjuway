@@ -94,8 +94,10 @@ Assets = {
     jump = "assets/images/player-jump.png",
   },
   Wall = {
-    past = "assets/images/bg-wall-1.jpg",
-    gameover = "assets/images/gameover.png"
+    past = "assets/images/bg-wall-1.png",
+    present = "assets/images/bg-wall-2.jpg",
+    future = "assets/images/bg-wall-3.png",
+    gameover = "assets/images/gameover.png",
   },
   Obstacle = {
     [0] = "assets/images/percent.png",
@@ -287,13 +289,17 @@ function love.draw()
   if Game.state == 'playing' then
     love.graphics.scale(Game.scale, Game.scale)
 
+    local image, x, y = GetBackgroundImage()
+
     love.graphics.setColor(1, 1, 1, 0.8)
-    love.graphics.draw(Game.background, 0, 0)
+    love.graphics.draw(image, 0, 0, 0, x, y)
 
     if Game.over then
       DrawGameover()
       return
     end
+
+    DrawBackgroundAssets()
 
     -- desenha o chão
     RGBColor(Colors.Orange)
@@ -456,7 +462,7 @@ function DrawGroundTiles()
 end
 
 function SelectGround()
-  return Game.scenarios[Game.scenery].ground[love.math.random(0, 0)]
+  return Game.scenarios[1].ground[0]
 end
 
 function AddGroundTile(tile)
@@ -486,6 +492,10 @@ end
 -- End GroundTiles
 
 function DrawBackgroundAssets()
+  if Game.scenary ~= 0 then
+    return
+  end
+
   RGBColor(Colors.White)
   love.graphics.draw(Game.backgroundAssets[4], 100, 0, 0, 1/Game.scale, 1/Game.scale)
 
@@ -515,8 +525,18 @@ end
 function LoadPlayerAssets()
   Player:SetImage(Assets.Player.stopped)
 
-  Game.background = LoadImage(Assets.Wall.past)
+  Game.scenery = 0
+  Game.background = {}
+
+  Game.background[0] = { image = LoadImage(Assets.Wall.past), x = 0.4, y = 0.4 }
+  Game.background[1] = { image = LoadImage(Assets.Wall.present), x = 0.5, y = 0.5 }
+  Game.background[2] = { image = LoadImage(Assets.Wall.future), x = 0.5, y = 0.5 }
   Game.backgroundGameover = LoadImage(Assets.Wall.gameover)
+end
+
+function GetBackgroundImage()
+  local b = Game.background[Game.scenery]
+  return b.image, b.x, b.y
 end
 
 function RGBColor(color)
@@ -734,13 +754,13 @@ function love.mousepressed(x, y)
   end
 end
 
-function NextScenery() 
+function NextScenery()
   if Game.scenery == 2 then
     Game.scenery = 0
-  else 
+  else
     Game.scenery = Game.scenery + 1
-  end 
-end 
+  end
+end
 
 function LoadImage(name)
   local img = love.graphics.newImage(name)
@@ -767,7 +787,6 @@ function ResetGameParams()
     obstacleYSpeed = 0,
     obstacleXAccelerationRate = 0.015,
     garmentXSpeed = 50,
-    obstacleXSpeed = 50,
     garmentXAccelerationRate = 0.015,
     garmentYSpeed = 0,
     groundXSpeed = 50,
