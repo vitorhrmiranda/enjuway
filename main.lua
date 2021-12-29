@@ -69,6 +69,18 @@ Assets = {
   Game = {
     score = "assets/images/score.png",
   },
+  Background = {
+    [0] = "assets/images/bg-asset-1.png",
+    [1] = "assets/images/bg-asset-2.png",
+    [2] = "assets/images/bg-asset-3.png",
+    [3] = "assets/images/bg-asset-4.png",
+    [4] = "assets/images/bg-asset-5.png",
+    [5] = "assets/images/bg-asset-6.png",
+    [6] = "assets/images/bg-asset-7.png",
+    [7] = "assets/images/bg-asset-8.png",
+    [8] = "assets/images/bg-asset-9.png",
+    [9] = "assets/images/bg-asset-10.png",
+  },
   Player = {
     stopped = "assets/images/player.png",
     animation = "assets/images/player-animation.png",
@@ -83,7 +95,10 @@ Assets = {
     [2] = "assets/images/bundle.png"
   },
   Garment = {
-    tshirt = "assets/images/tshirt.png",
+    [0] = "assets/images/tshirt.png",
+    [1] = "assets/images/boots-gray.png",
+    [2] = "assets/images/boots-brown.png",
+    [3] = "assets/images/skirt.png",
   },
   PowerUp = {
     sparkles = "assets/images/spark.png"
@@ -166,7 +181,7 @@ function love.load()
   Player.fixture = love.physics.newFixture(Player.body, Player.shape)
   Player.fixture:setUserData({ tag = Tags.player })
 
-  Player.animation = NewAnimation(love.graphics.newImage(Assets.Player.animation), 16, 16, 1)
+  Player.animation = NewAnimation(LoadImage(Assets.Player.animation), 16, 16, 1)
   Player.sounds.jump = love.audio.newSource(Sounds.Player.jump, "static")
   Player.sounds.jump:setVolume(0.05)
 
@@ -184,10 +199,13 @@ function love.load()
   Game.sounds.gameover = love.audio.newSource(Sounds.Game.gameover, "static")
   Game.sounds.gameover:setVolume(0.5)
 
-  Game.ScoreAsset = love.graphics.newImage(Assets.Game.score)
+  Game.ScoreAsset = LoadImage(Assets.Game.score)
 
   Garment:load()
+
   PowerUp:load()
+
+  LoadBackgroundAssets()
 end
 
 -- Roda a cada frame (Realizar update de estado aqui)
@@ -220,13 +238,6 @@ function love.update(dt)
   PowerUp:update(dt)
 end
 
--- Atualiza o clock de spawn dos obstaculos e garments a cada frame
-function UpdateClocks(dt)
-  obstacleClock:update(dt)
-  garmentClock:update(dt)
-  powerUpClock:update(dt)
-end
-
 -- Roda a cada frame (Realizar update de tela aqui)
 function love.draw()
   love.graphics.scale(Game.scale, Game.scale)
@@ -241,6 +252,8 @@ function love.draw()
     love.graphics.print("Game Over \nSe não enjoou\nAperte 'r' para recomeçar", 10, Game.height/2)
     return
   end
+
+  DrawBackgroundAssets()
 
   -- desenha o chão
   RGBColor(Colors.Orange)
@@ -309,6 +322,34 @@ function PlayTheme()
   Game.theme:play()
 end
 
+-- Atualiza o clock de spawn dos obstaculos e powerUps a cada frame
+function UpdateClocks(dt)
+  obstacleClock:update(dt)
+  powerUpClock:update(dt)
+end
+
+function LoadBackgroundAssets()
+  Game.backgroundAssets = {}
+  Game.backgroundAssets[4] = LoadImage(Assets.Background[4])
+  Game.backgroundAssets[3] = LoadImage(Assets.Background[3])
+  Game.backgroundAssets[5] = LoadImage(Assets.Background[5])
+  Game.backgroundAssets[9] = LoadImage(Assets.Background[9])
+end
+
+function DrawBackgroundAssets()
+  RGBColor(Colors.White)
+  love.graphics.draw(Game.backgroundAssets[4], 100, 0, 0, 1/Game.scale, 1/Game.scale)
+
+  RGBColor(Colors.White)
+  love.graphics.draw(Game.backgroundAssets[3], 200, 0, 0, 1/Game.scale, 1/Game.scale)
+
+  RGBColor(Colors.White)
+  love.graphics.draw(Game.backgroundAssets[5], 260, 50, 0, 1/Game.scale, 1/Game.scale)
+
+  love.graphics.setColor(1, 1, 1, 0.8)
+  love.graphics.draw(Game.backgroundAssets[9], 150, 40, 0, 1/Game.scale, 1/Game.scale)
+end
+
 function DrawPoints()
   love.graphics.draw(Game.ScoreAsset, 10, 0)
 
@@ -325,7 +366,7 @@ end
 function LoadPlayerAssets()
   Player:SetImage(Assets.Player.stopped)
 
-  Game.background = love.graphics.newImage(Assets.Wall.past)
+  Game.background = LoadImage(Assets.Wall.past)
 end
 
 function RGBColor(color)
@@ -377,8 +418,7 @@ end
 
 function PushObstacle()
   local obstacle = {}
-  obstacle.image = love.graphics.newImage(SelectObstacle())
-  obstacle.image:setFilter("nearest", "nearest")
+  obstacle.image = LoadImage(SelectObstacle())
 
   obstacle.body = love.physics.newBody(World, Game.width, Game.height, "dynamic")
   obstacle.shape = love.physics.newRectangleShape(obstacle.image:getWidth(), obstacle.image:getHeight())
@@ -485,8 +525,7 @@ function Player:Land()
 end
 
 function Player:SetImage(image)
-  Player.image = love.graphics.newImage(image)
-  Player.image:setFilter("nearest", "nearest")
+  Player.image = LoadImage(image)
 
   Player.width = Player.image:getWidth()
   Player.height = Player.image:getHeight()
@@ -537,4 +576,10 @@ function Player:Draw()
       Player.image:getHeight()/2
     )
   end
+end
+
+function LoadImage(name)
+  local img = love.graphics.newImage(name)
+  img:setFilter("nearest", "nearest")
+  return img
 end

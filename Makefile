@@ -4,4 +4,4 @@ exec:
 	love ./
 
 build:
-	zip enjuway.love .
+	zip -r enjuway.love .
